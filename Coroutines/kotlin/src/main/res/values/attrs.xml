@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="LightWeightImageView">
+        <attr name="imgSrc" format="reference" />
+        <attr name="imgPlaceHolder" format="reference" />
+        <attr name="imgPlaceHolderColor" format="color" />
+        <attr name="imgCircularProgress" format="boolean" />
+        <attr name="imgPlaceHolderScaleType" format="enum">
+            <enum name="matrix" value="0" />
+            <enum name="fitXY" value="1" />
+            <enum name="fitStart" value="2" />
+            <enum name="fitCenter" value="3" />
+            <enum name="fitEnd" value="4" />
+            <enum name="center" value="5" />
+            <enum name="centerCrop" value="6" />
+            <enum name="centerInside" value="7" />
+        </attr>
+        <attr name="imgTransition" format="boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="BottomMenuView">
+        <attr name="tabMenu" format="reference" />
+        <attr name="tabItemView" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="MenuHostFragment">
+        <attr name="navMenu" format="reference" />
+    </declare-styleable>
+
+</resources>

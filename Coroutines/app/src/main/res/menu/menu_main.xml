@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/postFragment"
+        android:icon="@drawable/ic_launcher_background"
+        android:title="Posts" />
+
+    <item
+        android:id="@+id/albumFragment"
+        android:icon="@drawable/ic_launcher_background"
+        android:title="Albums" />
+
+    <item
+        android:id="@+id/todoFragment"
+        android:icon="@drawable/ic_launcher_background"
+        android:title="Todos" />
+
+    <item
+        android:id="@+id/profileFragment"
+        android:icon="@drawable/ic_launcher_background"
+        android:title="Profile" />
+</menu>

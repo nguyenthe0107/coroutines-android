@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Kotlin</string>
+    <string name="nav_menu_controller_view_tag">nav_menu_controller_view_tag</string>
+</resources>

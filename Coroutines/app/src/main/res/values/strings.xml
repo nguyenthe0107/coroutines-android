@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Coroutines</string>
+    <string name="error_login_form">Error form login</string>
+    <string name="error_user_name">Error user name</string>
+    <string name="error_password">Error password</string>
+
+</resources>
