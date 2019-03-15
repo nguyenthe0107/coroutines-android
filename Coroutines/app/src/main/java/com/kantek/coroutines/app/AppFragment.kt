@@ -32,7 +32,7 @@ abstract class AppFragment<VM : BaseViewModel> : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mLoadingView = view.findViewById(R.id.viewLoading)
-        if (getAnnotation<ShareViewModel>()?.value != SharedOf.ACTIVITY) {
+        if (viewModel != (activity as? AppActivity<*>)?.viewModel) {
             viewModel.loading.observe(this) { showLoading(it) }
             viewModel.error.observe(this) {
                 (activity as AppActivity<*>).handleError(it)

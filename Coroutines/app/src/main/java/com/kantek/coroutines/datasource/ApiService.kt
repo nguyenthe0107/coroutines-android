@@ -10,8 +10,8 @@ interface ApiService {
     @GET("users/1")
     fun login(): Call<User>
 
-    @GET("users/{userId}/posts")
-    fun getPosts(@Query("userId") userId: String): Call<MutableList<Post>>
+    @GET("users/{id}/posts")
+    fun getPosts(@Query("id") id: String): Call<MutableList<Post>>
 
     @GET("posts/{id}")
     fun getPost(@Path("id") id: String): Call<Post>
@@ -19,17 +19,17 @@ interface ApiService {
     @GET("posts/{id}/comments")
     fun getComments(@Path("id") id: String): Call<MutableList<Comment>>
 
-    @GET("users/{userId}/albums")
-    fun getAlbums(@Path("userId") id: String): Call<MutableList<Album>>
+    @GET("users/{id}/albums")
+    fun getAlbums(@Path("id") id: String): Call<MutableList<Album>>
 
     @GET("albums/{id}/photos")
     fun getPhotos(@Path("id") id: String): Call<MutableList<Photo>>
 
-    @GET("users/{userId}/todos")
-    fun getTodos(@Path("userId") userId: String): Call<MutableList<Todo>>
+    @GET("users/{id}/todos")
+    fun getTodos(@Path("id") id: String): Call<MutableList<Todo>>
 
-    @PATCH("users/{userId}")
-    fun updateProfile(@Path("userId") id: String, @Body body: Map<String, String>): Call<User>
+    @PATCH("users/{id}")
+    fun updateProfile(@Path("id") id: String, @Body body: Map<String, String>): Call<User>
 }
 
 fun <T> Call<T>.call(): T {
