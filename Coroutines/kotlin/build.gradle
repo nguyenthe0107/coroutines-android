@@ -39,6 +39,11 @@ dependencies {
     implementation "android.arch.navigation:navigation-ui-ktx:$navVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$archVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$archVersion"
+    //Map
+    implementation "com.google.android.gms:play-services-location:$locationVersion"
+    implementation "com.google.android.gms:play-services-maps:16.1.0"
+    implementation "com.google.android.gms:play-services-places:$locationVersion"
+    implementation 'com.google.code.gson:gson:2.8.5'
 }
 repositories {
     mavenCentral()
