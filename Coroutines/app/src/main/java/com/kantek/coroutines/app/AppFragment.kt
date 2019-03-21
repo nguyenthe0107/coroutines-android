@@ -2,6 +2,7 @@ package com.kantek.coroutines.app
 
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.annotation.StringRes
 import android.support.core.annotations.LayoutId
 import android.support.core.annotations.ShareViewModel
 import android.support.core.annotations.SharedOf
@@ -14,6 +15,7 @@ import android.support.core.factory.ViewModelFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.kantek.coroutines.R
 
 abstract class AppFragment<VM : BaseViewModel> : BaseFragment() {
@@ -46,5 +48,13 @@ abstract class AppFragment<VM : BaseViewModel> : BaseFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(getAnnotation<LayoutId>()!!.value, container, false)
+    }
+
+    fun toast(@StringRes res: Int) {
+        Toast.makeText(activity, res, Toast.LENGTH_SHORT).show()
+    }
+
+    fun toast(text: String) {
+        Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
     }
 }

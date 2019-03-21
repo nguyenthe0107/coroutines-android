@@ -8,6 +8,11 @@ package com.kantek.coroutines.models
  */
 class Todo(
     val id: String,
-    val title: String,
-    val completed: Boolean
-)
+    var title: String,
+    var completed: Boolean
+) {
+    fun update(it: Todo) {
+        title = it.title
+        completed = it.completed
+    }
+}

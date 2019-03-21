@@ -2,6 +2,7 @@ package com.kantek.coroutines.app
 
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.annotation.StringRes
 import android.support.core.annotations.LayoutId
 import android.support.core.base.BaseActivity
 import android.support.core.base.BaseViewModel
@@ -52,13 +53,21 @@ abstract class AppActivity<VM : BaseViewModel> : BaseActivity() {
 
     fun handleError(error: Throwable?) {
         when (error) {
-            is ResourceException -> Toast.makeText(this, error.resource, Toast.LENGTH_SHORT).show()
+            is ResourceException -> toast(error.resource)
             is SnackException -> Snackbar.make(rootView, error.resource, Snackbar.LENGTH_SHORT).show()
             is AlertException -> mAlertDialog.apply { setMessage(getString(error.resource)) }.show()
             is UnknownHostException -> if (DriverUtils.isNetworkEnabled(this))
-                Toast.makeText(this, "Error Internal Server", Toast.LENGTH_SHORT).show()
-            else Toast.makeText(this, "No network connection", Toast.LENGTH_SHORT).show()
-            else -> Toast.makeText(this, error!!.message, Toast.LENGTH_SHORT).show()
+                toast("Error Internal Server")
+            else toast("No network connection")
+            else -> toast(error?.message ?: "Unknown")
         }
+    }
+
+    fun toast(@StringRes res: Int) {
+        Toast.makeText(this, res, Toast.LENGTH_SHORT).show()
+    }
+
+    fun toast(text: String) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
 }

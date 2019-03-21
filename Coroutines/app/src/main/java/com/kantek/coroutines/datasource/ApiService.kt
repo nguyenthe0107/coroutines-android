@@ -1,6 +1,5 @@
 package com.kantek.coroutines.datasource
 
-import android.util.Log
 import com.kantek.coroutines.exceptions.TokenException
 import com.kantek.coroutines.models.*
 import retrofit2.Call
@@ -30,14 +29,28 @@ interface ApiService {
 
     @PATCH("users/{id}")
     fun updateProfile(@Path("id") id: String, @Body body: Map<String, String>): Call<User>
+
+    @PATCH("todos/{id}")
+    fun updateTodo(@Path("id") id: String, @Body body: Map<String, String>): Call<Todo>
 }
 
 fun <T> Call<T>.call(): T {
     val response = execute()
     if (!response.isSuccessful) {
         if (response.code() == 500) throw TokenException()
-        Log.e("CALL_ERROR", response.toString())
-        throw Throwable(response.message())
+        throw Throwable(response.toString())
     }
     return response.body() ?: throw Throwable("Body null")
+}
+
+fun <T> Call<T>.call(function: T.() -> Unit): T {
+    return call().apply(function)
+}
+
+fun <T> Call<T>.tryCall(shouldBeSuccess: Throwable.() -> Boolean): T? {
+    return try {
+        call()
+    } catch (e: Throwable) {
+        if (!shouldBeSuccess(e)) throw e else null
+    }
 }

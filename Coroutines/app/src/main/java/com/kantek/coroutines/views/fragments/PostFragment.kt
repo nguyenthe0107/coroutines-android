@@ -5,10 +5,10 @@ import android.support.core.annotations.LayoutId
 import android.support.core.extensions.call
 import android.support.core.extensions.observe
 import android.view.View
-import com.kantek.coroutines.views.PostDetailActivity
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppFragment
 import com.kantek.coroutines.viewmodel.MainViewModel
+import com.kantek.coroutines.views.PostDetailActivity
 import com.kantek.coroutines.views.adapters.PostAdapter
 import kotlinx.android.synthetic.main.fragment_post.*
 

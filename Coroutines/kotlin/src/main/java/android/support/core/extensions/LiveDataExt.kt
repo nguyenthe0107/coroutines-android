@@ -4,6 +4,7 @@ import android.arch.lifecycle.*
 import android.support.core.base.BaseFragment
 import android.support.core.base.BaseViewModel
 import android.support.core.event.SingleLiveEvent
+import android.support.core.helpers.AppExecutors
 import android.support.v4.app.Fragment
 import kotlinx.coroutines.CoroutineScope
 
@@ -19,6 +20,10 @@ fun <T> MutableLiveData<T>.call() {
     value = value
 }
 
+fun <T> MutableLiveData<T>.loadOnDisk(function: () -> T?): LiveData<T> {
+    AppExecutors.onDisk { postValue(function()) }
+    return this
+}
 
 fun <T, V> LiveData<T>.map(function: (T?) -> V?): LiveData<V> {
     val next = MediatorLiveData<V>()
@@ -40,10 +45,10 @@ fun <T, V> LiveData<T>.mapLive(function: MutableLiveData<V>.(T?) -> Unit): LiveD
     return next
 }
 
-fun <T, V> LiveData<T>.mapLaunch(
+fun <T, V> LiveData<T>.map(
     viewModel: BaseViewModel,
     loading: MutableLiveData<Boolean>? = viewModel.loading,
-    error: SingleLiveEvent<Throwable>? = viewModel.error,
+    error: SingleLiveEvent<out Throwable>? = viewModel.error,
     function: suspend CoroutineScope.(T?) -> V?
 ): LiveData<V> {
     val next = MediatorLiveData<V>()

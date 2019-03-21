@@ -7,6 +7,7 @@ import android.support.core.extensions.observe
 import android.view.View
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppFragment
+import com.kantek.coroutines.models.Todo
 import com.kantek.coroutines.viewmodel.MainViewModel
 import com.kantek.coroutines.views.adapters.TodoAdapter
 import kotlinx.android.synthetic.main.fragment_todo.*
@@ -21,6 +22,12 @@ class TodoFragment : AppFragment<MainViewModel>() {
         viewModel.todos.observe(this) {
             mAdapter.items = it
         }
+        viewModel.updateTodoError.observe(this) {
+            toast("${it!!.get<Todo>().title} can not be updated")
+        }
+        viewModel.updateTodoSuccess.observe(this) {
+            mAdapter.notifyItemChanged(it!!)
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -28,6 +35,9 @@ class TodoFragment : AppFragment<MainViewModel>() {
         viewRefresh.setOnRefreshListener {
             viewModel.refresh.call()
             viewRefresh.isRefreshing = false
+        }
+        mAdapter.onItemClickListener = {
+            viewModel.updateTodo.value = it
         }
     }
 }

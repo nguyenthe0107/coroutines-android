@@ -3,7 +3,7 @@ package com.kantek.coroutines.datasource
 import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.support.core.di.Inject
-import android.support.core.helpers.AppExecutors
+import android.support.core.extensions.loadOnDisk
 import com.google.gson.Gson
 import com.kantek.coroutines.models.User
 
@@ -21,12 +21,8 @@ class AppCache(context: Context) {
         set(value) {
             mUser = value
             mShared.edit().putString(User::class.java.name, Gson().toJson(user)).apply()
-            userLive.postValue(value)
+            (userLive as MutableLiveData).postValue(value)
         }
 
-    val userLive = MutableLiveData<User>().apply {
-        AppExecutors.onDisk {
-            postValue(user)
-        }
-    }
+    val userLive = MutableLiveData<User>().loadOnDisk { user }
 }

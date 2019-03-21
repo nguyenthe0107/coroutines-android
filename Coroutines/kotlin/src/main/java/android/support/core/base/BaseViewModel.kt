@@ -6,6 +6,7 @@ import android.arch.lifecycle.ViewModel
 import android.support.core.event.LoadingEvent
 import android.support.core.event.SingleLiveEvent
 import android.support.core.lifecycle.LifeRegistry
+import android.util.Log
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
@@ -15,12 +16,7 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
     val refresh = SingleLiveEvent<Any>()
 
     private val mLife = LifeRegistry(this)
-    private var mCoroutineScope: MainScope? = null
-    private val mScope: MainScope
-        get() {
-            if (mCoroutineScope == null) mCoroutineScope = MainScope()
-            return mCoroutineScope!!
-        }
+    private val mScope = MainScope()
 
     override fun getLifecycle() = mLife
 
@@ -30,14 +26,17 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
 
     fun launch(
         loading: MutableLiveData<Boolean>? = this@BaseViewModel.loading,
-        error: SingleLiveEvent<Throwable>? = this@BaseViewModel.error,
+        error: SingleLiveEvent<out Throwable>? = this@BaseViewModel.error,
         block: suspend CoroutineScope.() -> Unit
     ): Job {
         return mScope.launch {
             try {
                 loading?.value = true
                 block()
+            } catch (e: CancellationException) {
+                Log.i(this@BaseViewModel.javaClass.name, e.message ?: "Unknown")
             } catch (e: Throwable) {
+                Log.e("CALL_ERROR", e.message ?: "Unknown")
                 if (error != null) error.value = e
             } finally {
                 loading?.value = false
@@ -47,7 +46,7 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
 
     override fun onCleared() {
         mLife.stop().destroy()
-        mCoroutineScope?.coroutineContext?.cancel()
+        mScope.coroutineContext.cancel()
     }
 
     private class MainScope : CoroutineScope {
