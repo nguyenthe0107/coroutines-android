@@ -26,11 +26,11 @@ fun <T> MutableLiveData<T>.loadOnDisk(function: () -> T?): LiveData<T> {
 }
 
 fun <T, V> LiveData<T>.map(function: (T?) -> V?): LiveData<V> {
-    val next = MediatorLiveData<V>()
-    next.addSource(this) {
-        next.value = function(it)
+    return MediatorLiveData<V>().also { next ->
+        next.addSource(this) {
+            next.value = function(it)
+        }
     }
-    return next
 }
 
 fun <T, V> LiveData<T>.switchMap(function: (T?) -> LiveData<V>) = Transformations.switchMap(this) {
@@ -51,13 +51,13 @@ fun <T, V> LiveData<T>.map(
     error: SingleLiveEvent<out Throwable>? = viewModel.error,
     function: suspend CoroutineScope.(T?) -> V?
 ): LiveData<V> {
-    val next = MediatorLiveData<V>()
-    next.addSource(this) {
-        viewModel.launch(loading, error) {
-            next.value = function(this, it)
+    return MediatorLiveData<V>().also { next ->
+        next.addSource(this) {
+            viewModel.launch(loading, error) {
+                next.postValue(function(this, it))
+            }
         }
     }
-    return next
 }
 
 fun <T> LiveData<T>.submit(owner: LifecycleOwner) {

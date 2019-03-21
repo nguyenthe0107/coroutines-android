@@ -1,11 +1,11 @@
 package com.kantek.coroutines.viewmodel
 
-import android.support.core.base.BaseViewModel
 import android.support.core.event.SingleLiveEvent
 import android.support.core.extensions.call
 import android.support.core.extensions.map
 import android.support.core.extensions.submit
 import com.kantek.coroutines.R
+import com.kantek.coroutines.app.AppViewModel
 import com.kantek.coroutines.datasource.AppCache
 import com.kantek.coroutines.exceptions.UpdateException
 import com.kantek.coroutines.models.Todo
@@ -20,7 +20,7 @@ class MainViewModel(
     albumRepository: AlbumRepository,
     appCache: AppCache,
     userRepository: UserRepository
-) : BaseViewModel() {
+) : AppViewModel() {
     val profile = appCache.userLive
     val updateProfile = SingleLiveEvent<Pair<Int, String>>()
     val updateTodo = SingleLiveEvent<Todo>()
@@ -49,7 +49,7 @@ class MainViewModel(
                 R.id.txtName -> "name" to it.second
                 R.id.txtEmail -> "email" to it.second
                 R.id.txtPhone -> "phone" to it.second
-                else -> throw Throwable("Not found field")
+                else -> error("Not found field")
             }
             userRepository.update(body)
         }.submit(this)

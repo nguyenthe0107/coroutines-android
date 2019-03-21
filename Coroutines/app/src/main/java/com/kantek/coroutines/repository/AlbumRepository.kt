@@ -2,31 +2,27 @@ package com.kantek.coroutines.repository
 
 import android.support.core.di.Repository
 import android.support.core.extensions.withIO
+import android.support.core.helpers.TemporaryData
 import com.kantek.coroutines.datasource.ApiService
 import com.kantek.coroutines.datasource.AppCache
-import com.kantek.coroutines.datasource.call
+import com.kantek.coroutines.extensions.call
 import com.kantek.coroutines.models.Album
 import com.kantek.coroutines.models.Photo
+import java.util.concurrent.TimeUnit
 
 class AlbumRepository(
     private val apiService: ApiService,
     private val appCache: AppCache
 ) : Repository {
-    private val mAlbums = hashMapOf<String, MutableList<Album>>()
-    private val mPhotos = hashMapOf<String, MutableList<Photo>>()
+    private val mAlbums = TemporaryData<String, MutableList<Album>>(1, TimeUnit.MINUTES)
+    private val mPhotos = TemporaryData<String, MutableList<Photo>>(1, TimeUnit.MINUTES)
 
     suspend fun getAlbums() = withIO {
         val userId = appCache.user!!.id
-        if (mAlbums.containsKey(userId)) return@withIO mAlbums[userId]
-        apiService.getAlbums(userId).call {
-            mAlbums[userId] = this
-        }
+        mAlbums.getOrLoad(userId) { apiService.getAlbums(userId).call() }
     }
 
     suspend fun getPhotos(albumId: String) = withIO {
-        if (mPhotos.containsKey(albumId)) return@withIO mPhotos[albumId]
-        apiService.getPhotos(albumId).call {
-            mPhotos[albumId] = this
-        }
+        mPhotos.getOrLoad(albumId) { apiService.getPhotos(albumId).call() }
     }
 }

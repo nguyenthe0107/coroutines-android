@@ -3,6 +3,7 @@ package android.support.core.extensions
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
+import android.os.Parcelable
 import android.support.core.annotations.SharedOf
 import android.support.core.base.BaseActivity
 import android.support.core.base.BaseFragment
@@ -16,30 +17,37 @@ import kotlin.reflect.KClass
 
 const val REQUEST_FOR_RESULT_INSTANTLY = 1000
 
-fun BaseFragment.open(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Serializable>): BaseFragment {
-    startActivity(Intent(activity, clazz.java).apply { args.forEach { putExtra(it.first, it.second) } })
+fun BaseFragment.open(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): BaseFragment {
+    startActivity(Intent(activity, clazz.java).put(args))
     return this
 }
 
-fun BaseActivity.open(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Serializable>): BaseActivity {
-    startActivity(Intent(this, clazz.java).apply { args.forEach { putExtra(it.first, it.second) } })
+fun BaseActivity.open(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): BaseActivity {
+    startActivity(Intent(this, clazz.java).put(args))
     return this
 }
 
-fun BaseFragment.openForResult(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Serializable>): ResultLifecycle {
-    startActivityForResult(Intent(activity, clazz.java).apply {
-        args.forEach { putExtra(it.first, it.second) }
-    }, REQUEST_FOR_RESULT_INSTANTLY)
+fun BaseFragment.openForResult(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): ResultLifecycle {
+    startActivityForResult(Intent(activity, clazz.java).put(args), REQUEST_FOR_RESULT_INSTANTLY)
     return resultLife
+}
+
+private fun Intent.put(args: Array<out Pair<String, Any>>): Intent {
+    args.forEach {
+        when {
+            it.second is Serializable -> putExtra(it.first, it.second as Serializable)
+            it.second is Parcelable -> putExtra(it.first, it.second as Parcelable)
+            else -> throw RuntimeException("Not support this type ${it.second.javaClass.name}")
+        }
+    }
+    return this
 }
 
 fun BaseActivity.openForResult(
     clazz: KClass<out AppCompatActivity>,
-    vararg args: Pair<String, Serializable>
+    vararg args: Pair<String, Any>
 ): ResultLifecycle {
-    startActivityForResult(Intent(this, clazz.java).apply {
-        args.forEach { putExtra(it.first, it.second) }
-    }, REQUEST_FOR_RESULT_INSTANTLY)
+    startActivityForResult(Intent(this, clazz.java).put(args), REQUEST_FOR_RESULT_INSTANTLY)
     return resultLife
 }
 

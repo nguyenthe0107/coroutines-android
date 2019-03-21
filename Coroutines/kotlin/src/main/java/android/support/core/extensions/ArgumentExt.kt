@@ -3,17 +3,24 @@
 package android.support.core.extensions
 
 import android.content.Intent
+import android.os.Parcelable
 import android.support.v4.app.FragmentActivity
 import java.io.Serializable
 
-fun <T : Serializable> Intent.get(key: String): T? {
-    return this.getSerializableExtra(key) as? T
+fun <T : Any> Intent.get(key: String): T? {
+    return extras?.get(key) as? T
+}
+
+inline fun <reified T : Any> Intent.get(): T? {
+    return extras?.get(T::class.java.name) as? T
 }
 
 fun <T : Serializable> T.asArgument() = Pair<String, Serializable>(javaClass.name, this)
 
-inline fun <reified T : Serializable> FragmentActivity.argument(): Lazy<T> =
-    lazy { intent.getSerializableExtra(T::class.java.name) as T }
+fun <T : Parcelable> T.asArgument() = Pair<String, Parcelable>(javaClass.name, this)
 
-fun <T : Serializable> FragmentActivity.argument(key: String): Lazy<T> =
-    lazy { intent.getSerializableExtra(key) as T }
+inline fun <reified T : Any> FragmentActivity.argument(): Lazy<T> =
+    lazy { intent.extras?.get(T::class.java.name) as T }
+
+fun <T : Any> FragmentActivity.argument(key: String): Lazy<T> =
+    lazy { intent.extras?.get(key) as T }

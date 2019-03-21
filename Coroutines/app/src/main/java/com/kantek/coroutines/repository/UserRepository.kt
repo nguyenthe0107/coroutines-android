@@ -4,7 +4,7 @@ import android.support.core.di.Repository
 import android.support.core.extensions.withIO
 import com.kantek.coroutines.datasource.ApiService
 import com.kantek.coroutines.datasource.AppCache
-import com.kantek.coroutines.datasource.call
+import com.kantek.coroutines.extensions.call
 
 class UserRepository(
     private val apiService: ApiService,

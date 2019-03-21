@@ -28,8 +28,8 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
         loading: MutableLiveData<Boolean>? = this@BaseViewModel.loading,
         error: SingleLiveEvent<out Throwable>? = this@BaseViewModel.error,
         block: suspend CoroutineScope.() -> Unit
-    ): Job {
-        return mScope.launch {
+    ) {
+        mScope.launch {
             try {
                 loading?.value = true
                 block()
@@ -37,14 +37,15 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
                 Log.i(this@BaseViewModel.javaClass.name, e.message ?: "Unknown")
             } catch (e: Throwable) {
                 Log.e("CALL_ERROR", e.message ?: "Unknown")
-                if (error != null) error.value = e
+                error?.value = e
             } finally {
-                loading?.value = false
+                loading?.postValue(false)
             }
         }
     }
 
     override fun onCleared() {
+        System.gc()
         mLife.stop().destroy()
         mScope.coroutineContext.cancel()
     }

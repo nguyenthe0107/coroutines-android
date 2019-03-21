@@ -40,4 +40,9 @@ class AlbumDetailActivity : AppActivity<AlbumViewModel>() {
             PhotoActivity.show(this, it)
         }
     }
+
+    override fun onDestroy() {
+        mPhotoAdapter.items = null
+        super.onDestroy()
+    }
 }

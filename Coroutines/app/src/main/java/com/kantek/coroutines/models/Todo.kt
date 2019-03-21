@@ -11,8 +11,10 @@ class Todo(
     var title: String,
     var completed: Boolean
 ) {
-    fun update(it: Todo) {
+
+    infix fun copy(it: Todo): Todo {
         title = it.title
         completed = it.completed
+        return this
     }
 }

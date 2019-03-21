@@ -1,0 +1,31 @@
+package com.kantek.coroutines.extensions
+
+import com.kantek.coroutines.exceptions.TokenException
+import retrofit2.Call
+import java.net.SocketTimeoutException
+
+
+fun <T> Call<T>.call(): T {
+    val response = try {
+        execute()
+    } catch (e: SocketTimeoutException) {
+        throw Throwable("Request timeout, Try again")
+    }
+    if (!response.isSuccessful) {
+        if (response.code() == 500) throw TokenException()
+        throw Throwable(response.toString())
+    }
+    return response.body() ?: throw Throwable("Body null")
+}
+
+fun <T> Call<T>.call(function: T.() -> Unit): T {
+    return call().apply(function)
+}
+
+fun <T> Call<T>.tryCall(shouldBeSuccess: Throwable.() -> Boolean): T? {
+    return try {
+        call()
+    } catch (e: Throwable) {
+        if (!shouldBeSuccess(e)) throw e else null
+    }
+}
