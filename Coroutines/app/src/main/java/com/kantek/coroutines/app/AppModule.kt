@@ -1,5 +1,9 @@
+@file:Suppress("unused")
+
 package com.kantek.coroutines.app
 
+import android.arch.persistence.room.Room
+import android.content.Context
 import android.support.core.di.Provide
 import android.support.core.factory.TLSSocketFactory
 import com.google.gson.GsonBuilder
@@ -7,12 +11,12 @@ import com.ihsanbal.logging.Level
 import com.ihsanbal.logging.LoggingInterceptor
 import com.kantek.coroutines.BuildConfig
 import com.kantek.coroutines.datasource.ApiService
+import com.kantek.coroutines.datasource.AppDatabase
 import okhttp3.OkHttpClient
 import okhttp3.internal.platform.Platform
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-@Suppress("unused")
 class AppModule {
     @Provide
     fun provideInterceptorBuilder(): LoggingInterceptor.Builder = LoggingInterceptor.Builder()
@@ -40,9 +44,11 @@ class AppModule {
     @Provide
     fun provideOkHttpClient(
         client: OkHttpClient.Builder,
-        loggingInterceptor: LoggingInterceptor
+        loggingInterceptor: LoggingInterceptor,
+        token: TokenInterceptor
     ): OkHttpClient {
         return client.addInterceptor(loggingInterceptor)
+            .addInterceptor(token)
             .build()
     }
 
@@ -64,4 +70,8 @@ class AppModule {
         .build()
         .create(ApiService::class.java)!!
 
+    @Provide
+    fun provideAppDatabase(context: Context) =
+        Room.databaseBuilder(context, AppDatabase::class.java, "app_database")
+            .build()
 }

@@ -7,7 +7,7 @@ import android.support.core.extensions.loadOnDisk
 import com.google.gson.Gson
 import com.kantek.coroutines.models.User
 
-@Inject(singleton = true)
+@Inject(true)
 class AppCache(context: Context) {
     private val mShared = context.getSharedPreferences("test:cache", Context.MODE_PRIVATE)
     private var mUser: User? = null

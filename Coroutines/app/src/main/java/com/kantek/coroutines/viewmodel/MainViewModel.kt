@@ -1,13 +1,13 @@
 package com.kantek.coroutines.viewmodel
 
 import android.support.core.event.SingleLiveEvent
-import android.support.core.extensions.call
 import android.support.core.extensions.map
 import android.support.core.extensions.submit
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppViewModel
+import com.kantek.coroutines.app.UpdateException
 import com.kantek.coroutines.datasource.AppCache
-import com.kantek.coroutines.exceptions.UpdateException
+import com.kantek.coroutines.datasource.AppEvent
 import com.kantek.coroutines.models.Todo
 import com.kantek.coroutines.repository.AlbumRepository
 import com.kantek.coroutines.repository.PostRepository
@@ -18,8 +18,9 @@ class MainViewModel(
     postRepository: PostRepository,
     todoRepository: TodoRepository,
     albumRepository: AlbumRepository,
+    userRepository: UserRepository,
     appCache: AppCache,
-    userRepository: UserRepository
+    appEvent: AppEvent
 ) : AppViewModel() {
     val profile = appCache.userLive
     val updateProfile = SingleLiveEvent<Pair<Int, String>>()
@@ -43,7 +44,6 @@ class MainViewModel(
     }
 
     init {
-        refresh.call()
         updateProfile.map(this, loading = null) {
             val body = when (it!!.first) {
                 R.id.txtName -> "name" to it.second
@@ -53,5 +53,6 @@ class MainViewModel(
             }
             userRepository.update(body)
         }.submit(this)
+        appEvent.networkChanged.listen(this, refresh, posts, albums, todos)
     }
 }

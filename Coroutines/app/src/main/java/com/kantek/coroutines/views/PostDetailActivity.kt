@@ -28,7 +28,9 @@ class PostDetailActivity : AppActivity<PostViewModel>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mAdapter = CommentAdapter(recvContent)
-        viewModel.post.value = mPost
+        appEvent.networkChanged.observe(this) {
+            viewModel.post.value = mPost
+        }
         viewModel.post.observe(this) {
             txtTitle.text = it!!.title
             txtBody.text = it.body

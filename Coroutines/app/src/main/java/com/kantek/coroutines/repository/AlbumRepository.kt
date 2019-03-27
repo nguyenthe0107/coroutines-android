@@ -19,7 +19,7 @@ class AlbumRepository(
 
     suspend fun getAlbums() = withIO {
         val userId = appCache.user!!.id
-        mAlbums.getOrLoad(userId) { apiService.getAlbums(userId).call() }
+        mAlbums.getOrLoad(userId) { apiService.getAlbums().call() }
     }
 
     suspend fun getPhotos(albumId: String) = withIO {

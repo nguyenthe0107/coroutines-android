@@ -19,7 +19,7 @@ class PostRepository(
 
     suspend fun getPosts() = withIO {
         val userId = appCache.user!!.id
-        mPosts.getOrLoad(userId) { apiService.getPosts(userId).call() }
+        mPosts.getOrLoad(userId) { apiService.getPosts().call() }
     }
 
     suspend fun getPost(id: String) = withIO {

@@ -6,7 +6,7 @@ import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.OnLifecycleEvent
 
 abstract class ForwardEvent<T : Any, K : Any> {
-    fun observe(owner: LifecycleOwner, function: (T?) -> Unit) {
+    open fun observe(owner: LifecycleOwner, function: (T?) -> Unit) {
         ForwardEvent.Notify(owner, function).apply {
             val event = registry(this)
             onDestroy = { unRegistry(event) }

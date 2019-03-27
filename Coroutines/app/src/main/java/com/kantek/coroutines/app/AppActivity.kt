@@ -8,6 +8,7 @@ import android.support.core.base.BaseActivity
 import android.support.core.base.BaseViewModel
 import android.support.core.extensions.getAnnotation
 import android.support.core.extensions.getFirstGenericParameter
+import android.support.core.extensions.inject
 import android.support.core.extensions.observe
 import android.support.core.factory.ViewModelFactory
 import android.support.core.utils.DriverUtils
@@ -16,9 +17,8 @@ import android.support.v7.app.AlertDialog
 import android.view.View
 import android.widget.Toast
 import com.kantek.coroutines.R
-import com.kantek.coroutines.exceptions.AlertException
-import com.kantek.coroutines.exceptions.ResourceException
-import com.kantek.coroutines.exceptions.SnackException
+import com.kantek.coroutines.datasource.AppEvent
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
 
@@ -31,6 +31,7 @@ abstract class AppActivity<VM : BaseViewModel> : BaseActivity() {
             .create()
     }
     private val mLoadingView: View? by lazy { findViewById<View>(R.id.viewLoading) }
+    val appEvent: AppEvent by inject()
 
     @Suppress("UNCHECKED_CAST")
     val viewModel: VM by lazy {
@@ -54,6 +55,7 @@ abstract class AppActivity<VM : BaseViewModel> : BaseActivity() {
     fun handleError(error: Throwable?) {
         when (error) {
             is ResourceException -> toast(error.resource)
+            is SocketTimeoutException -> toast(R.string.error_request_timeout)
             is SnackException -> Snackbar.make(rootView, error.resource, Snackbar.LENGTH_SHORT).show()
             is AlertException -> mAlertDialog.apply { setMessage(getString(error.resource)) }.show()
             is UnknownHostException -> if (DriverUtils.isNetworkEnabled(this))

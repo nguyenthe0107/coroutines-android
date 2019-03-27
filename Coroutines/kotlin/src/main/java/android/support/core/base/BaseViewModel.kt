@@ -36,7 +36,7 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
             } catch (e: CancellationException) {
                 Log.i(this@BaseViewModel.javaClass.name, e.message ?: "Unknown")
             } catch (e: Throwable) {
-                Log.e("CALL_ERROR", e.message ?: "Unknown")
+                Log.e("CALL_ERROR", "${e.javaClass.name} ${e.message ?: "Unknown"}")
                 error?.value = e
             } finally {
                 loading?.postValue(false)

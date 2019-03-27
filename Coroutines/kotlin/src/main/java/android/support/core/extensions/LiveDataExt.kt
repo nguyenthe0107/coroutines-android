@@ -20,6 +20,10 @@ fun <T> MutableLiveData<T>.call() {
     value = value
 }
 
+fun <T> MutableLiveData<T>.refresh() {
+    if (value != null) value = value
+}
+
 fun <T> MutableLiveData<T>.loadOnDisk(function: () -> T?): LiveData<T> {
     AppExecutors.onDisk { postValue(function()) }
     return this
