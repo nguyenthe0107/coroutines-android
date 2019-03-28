@@ -40,6 +40,10 @@ class RequestEvent<T>(owner: LifecycleOwner) : RefreshEvent<T>(owner) {
         super.setValue(value)
     }
 
+    /**
+     * Put value into temporary and waiting for event call to forward
+     * @param value Value in refreshing
+     */
     infix fun put(value: T) {
         mStoreValue = value
     }
