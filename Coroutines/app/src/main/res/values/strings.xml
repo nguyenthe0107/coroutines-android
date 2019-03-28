@@ -4,5 +4,7 @@
     <string name="error_user_name">Error user name</string>
     <string name="error_password">Error password</string>
     <string name="error_request_timeout">Request timeout. Please, try again</string>
+    <string name="warning_online">Online</string>
+    <string name="warning_offline">Offline</string>
 
 </resources>

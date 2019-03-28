@@ -29,9 +29,7 @@ class AlbumDetailActivity : AppActivity<AlbumViewModel>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mPhotoAdapter = PhotoAdapter(recvContent)
-        appEvent.networkChanged.observe(this) {
-            viewModel.album.value = mAlbum
-        }
+        viewModel.album put mAlbum
         viewModel.photos.observe(this) {
             mPhotoAdapter.items = it
         }

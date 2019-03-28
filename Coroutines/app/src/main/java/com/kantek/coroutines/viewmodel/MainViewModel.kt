@@ -53,6 +53,6 @@ class MainViewModel(
             }
             userRepository.update(body)
         }.submit(this)
-        appEvent.networkChanged.listen(this, refresh, posts, albums, todos)
+        refresh.addEvent(appEvent.networkChanged, posts, albums, todos)
     }
 }
