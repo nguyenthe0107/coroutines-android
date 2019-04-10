@@ -20,7 +20,7 @@
 
     <declare-styleable name="BottomMenuView">
         <attr name="tabMenu" format="reference" />
-        <attr name="tabItemView" format="reference" />
+        <attr name="tabCustom" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="MenuHostFragment">

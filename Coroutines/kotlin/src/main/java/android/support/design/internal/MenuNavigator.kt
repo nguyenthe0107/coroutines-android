@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.support.R
+import android.support.annotation.IdRes
 import android.support.annotation.NonNull
+import android.support.core.base.BaseFragment
 import android.support.design.widget.MenuHostFragment
 import android.support.design.widget.SupportNavHostFragment
 import android.support.v4.app.Fragment
@@ -47,6 +49,13 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         return navigate(destination, args, navOptions)
     }
 
+    fun navigate(hostDestination: Destination, @IdRes childDestination: Int, args: Bundle?, navOptions: NavOptions?): NavDestination? {
+        return navigate(hostDestination, Bundle().apply {
+            putInt(MenuHostFragment.KEY_NAVIGATE_CHILD_ID, childDestination)
+            putBundle(MenuHostFragment.KEY_NAVIGATE_ARGS, args)
+        }, navOptions)
+    }
+
     fun navigate(destination: Destination) {
         navigate(destination, null)
     }
@@ -56,7 +65,10 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
     }
 
     fun navigate(destination: Destination, args: Bundle?, navOptions: NavOptions?): NavDestination? {
-        if (mCurrentDestination?.id == destination.id) return destination
+        if (mCurrentDestination?.id == destination.id) {
+            if (args != null) notifyArgumentsChanged(destination, args)
+            return destination
+        }
         startUpdate()
         if (mCurrentDestination == null) hideFragmentsIfNeeded()
         addAnimationIfNeeded(navOptions)
@@ -66,6 +78,20 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         mCurrentDestination = destination
         mOnNavigateChangedListener(destination.id)
         return destination
+    }
+
+    private fun notifyArgumentsChanged(destination: Destination, args: Bundle) {
+        val fragment = fragmentManager.findFragmentByTag(makeFragmentName(containerId, destination.id))
+        when (fragment) {
+            is BaseFragment -> {
+                fragment.arguments = args
+                fragment.onNavigateArguments(args)
+            }
+            is MenuHostFragment -> {
+                fragment.addArgs(args)
+                fragment.handleArguments()
+            }
+        }
     }
 
     private fun addAnimationIfNeeded(navOptions: NavOptions?) {
@@ -112,9 +138,12 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
             mCurTransaction!!.add(containerId, fragment, makeFragmentName(containerId, destination.id))
         }
         mCurTransaction!!.setPrimaryNavigationFragment(fragment)
-        if (fragment.javaClass.isAssignableFrom(NavHostFragment::class.java) && args != null)
-            throw RuntimeException("Not support by pass arguments to Navigation Graph")
-        args?.apply { fragment.arguments = this }
+
+        when (fragment) {
+            is MenuHostFragment -> if (args != null) fragment.addArgs(args)
+            is NavHostFragment -> if (args != null) throw IllegalArgumentException("Not support by pass arguments for NavHostFragment")
+            else -> fragment.arguments = args
+        }
     }
 
     abstract fun hideFragment(fragment: Fragment)

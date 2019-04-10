@@ -1,5 +1,6 @@
 package android.support.core.extensions
 
+import android.app.Activity
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
@@ -8,6 +9,7 @@ import android.support.core.annotations.SharedOf
 import android.support.core.base.BaseActivity
 import android.support.core.base.BaseFragment
 import android.support.core.factory.ViewModelFactory
+import android.support.core.functional.Dispatcher
 import android.support.core.lifecycle.ResultLifecycle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
@@ -17,19 +19,29 @@ import kotlin.reflect.KClass
 
 const val REQUEST_FOR_RESULT_INSTANTLY = 1000
 
-fun BaseFragment.open(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): BaseFragment {
-    startActivity(Intent(activity, clazz.java).put(args))
+fun Dispatcher.open(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): Dispatcher {
+    when (this) {
+        is Fragment -> startActivity(Intent(activity, clazz.java).put(args))
+        is Activity -> startActivity(Intent(this, clazz.java).put(args))
+        else -> throw IllegalArgumentException("This is not instance of activity or fragment")
+    }
     return this
 }
 
-fun BaseActivity.open(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): BaseActivity {
-    startActivity(Intent(this, clazz.java).put(args))
-    return this
+fun Dispatcher.openForResult(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): ResultLifecycle {
+    when (this) {
+        is BaseFragment -> startActivityForResult(Intent(activity, clazz.java).put(args), REQUEST_FOR_RESULT_INSTANTLY)
+        is BaseActivity -> startActivityForResult(Intent(this, clazz.java).put(args), REQUEST_FOR_RESULT_INSTANTLY)
+        else -> throw IllegalArgumentException("This is not instance of BaseActivity or BaseFragment")
+    }
+    return getResultLifecycle()
 }
 
-fun BaseFragment.openForResult(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): ResultLifecycle {
-    startActivityForResult(Intent(activity, clazz.java).put(args), REQUEST_FOR_RESULT_INSTANTLY)
-    return resultLife
+fun Dispatcher.close() {
+    when (this) {
+        is Fragment -> activity!!.finish()
+        is Activity -> finish()
+    }
 }
 
 private fun Intent.put(args: Array<out Pair<String, Any>>): Intent {
@@ -41,18 +53,6 @@ private fun Intent.put(args: Array<out Pair<String, Any>>): Intent {
         }
     }
     return this
-}
-
-fun BaseActivity.openForResult(
-    clazz: KClass<out AppCompatActivity>,
-    vararg args: Pair<String, Any>
-): ResultLifecycle {
-    startActivityForResult(Intent(this, clazz.java).put(args), REQUEST_FOR_RESULT_INSTANTLY)
-    return resultLife
-}
-
-fun FragmentActivity.close() {
-    finish()
 }
 
 inline fun <reified T : ViewModel> Fragment.viewModel(sharedOf: SharedOf) =

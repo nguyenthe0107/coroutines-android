@@ -4,10 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.support.annotation.NavigationRes
+import android.support.core.functional.MenuOwner
 import android.support.design.internal.MenuNavController
 import android.support.design.internal.MenuNavigator
 import android.support.design.internal.TYPE_KEEP_STATE
-import android.support.core.functional.MenuOwner
+import android.support.design.internal.addBundle
 import android.support.v4.app.Fragment
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -39,9 +40,7 @@ class MenuHostFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val frameLayout = FrameLayout(inflater.context)
-        frameLayout.id = id
-        return frameLayout
+        return FrameLayout(inflater.context).also { it.id = id }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -54,14 +53,30 @@ class MenuHostFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val menuId = arguments?.getInt(KEY_MENU_ID) ?: 0
-        if (menuId != 0) {
-            val rootView = if (view!!.parent != null) view!!.parent as View else view!!
-            val view = rootView.findViewById<View>(menuId)
-            setupWithView(view)
-            mOnActivityCreatedListener?.invoke()
-        } else {
-            navController!!.navigateToStart()
+        if (menuId != 0) setMenu(menuId)
+        handleArguments()
+    }
+
+    fun handleArguments() {
+        val menuId = arguments?.getInt(KEY_MENU_ID) ?: 0
+        val byPassArgs = arguments?.getBundle(KEY_PASS_NAVIGATE)
+        val childId = byPassArgs?.getInt(KEY_NAVIGATE_CHILD_ID) ?: 0
+        val navArgs = byPassArgs?.getBundle(KEY_NAVIGATE_ARGS)
+
+        when {
+            childId != 0 -> {
+                arguments!!.remove(KEY_PASS_NAVIGATE)
+                navController!!.navigate(childId, navArgs)
+            }
+            menuId != 0 -> mOnActivityCreatedListener?.invoke()
+            else -> navController!!.navigateToStart()
         }
+    }
+
+    private fun setMenu(menuId: Int) {
+        val rootView = if (view!!.parent != null) view!!.parent as View else view!!
+        val view = rootView.findViewById<View>(menuId)
+        setupWithView(view)
     }
 
     override fun onInflate(context: Context?, attrs: AttributeSet?, savedInstanceState: Bundle?) {
@@ -101,14 +116,14 @@ class MenuHostFragment : Fragment() {
                 navController!!.navigate(view.getCurrentId())
             }
             view.setOnIdSelectedListener {
-                navController!!.navigate(it, navOptions)
+                navController!!.navigate(it, navOptions = navOptions)
             }
             navController!!.setOnNavigateChangeListener { view.selectId(it) }
         } else {
             if (navController!!.getDestinationCount() < 2) throw RuntimeException("Navigation graph need 2 fragment to setup")
             val toggle = {
                 val destination = navController!!.getDestinationActivated(!view.isActivated)
-                navController!!.navigate(destination, navOptions)
+                navController!!.navigate(destination, navOptions = navOptions)
             }
             mOnActivityCreatedListener = toggle
             view.setOnClickListener {
@@ -119,19 +134,28 @@ class MenuHostFragment : Fragment() {
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
-        val currentFragment = childFragmentManager.primaryNavigationFragment
-        if (currentFragment != null) {
-            currentFragment.onHiddenChanged(hidden)
-        } else {
-            childFragmentManager.fragments
-                .find { !it.isHidden && it.userVisibleHint }
-                ?.onHiddenChanged(hidden)
+        var visibleChildFragment = childFragmentManager.primaryNavigationFragment
+        if (visibleChildFragment == null) {
+            visibleChildFragment = childFragmentManager.fragments.find { !it.isHidden && it.userVisibleHint }
+        }
+        visibleChildFragment?.also { fragment ->
+            arguments?.getBundle(KEY_PASS_NAVIGATE)?.also { hostArgs ->
+                fragment.addBundle(KEY_PASS_NAVIGATE, hostArgs)
+            }
+            fragment.onHiddenChanged(hidden)
         }
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         if (isAdded) onHiddenChanged(!isVisibleToUser)
+    }
+
+    fun addArgs(newArgs: Bundle) {
+        var args = arguments
+        if (args == null) args = Bundle()
+        args.putBundle(KEY_PASS_NAVIGATE, newArgs)
+        arguments = args
     }
 
     companion object {
@@ -152,5 +176,9 @@ class MenuHostFragment : Fragment() {
         private const val KEY_GRAPH_ID = "android-support-nav:fragment:graphId"
         private const val KEY_MENU_ID = "android-support-nav:fragment:menuId"
         private const val KEY_NAV_CONTROLLER_STATE = "android-support-nav:fragment:navControllerState"
+
+        const val KEY_PASS_NAVIGATE = "android-support-nav:fragment:args"
+        const val KEY_NAVIGATE_ARGS = "android-support-nav:fragment:navigate:args"
+        const val KEY_NAVIGATE_CHILD_ID = "android-support-nav:fragment:navigate:childId"
     }
 }

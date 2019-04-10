@@ -1,6 +1,7 @@
 package android.support.design.widget
 
 import android.annotation.SuppressLint
+import android.arch.lifecycle.Lifecycle
 import android.content.Context
 import android.support.annotation.NavigationRes
 import android.support.core.base.BaseFragment
@@ -49,14 +50,14 @@ class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context
         navController.navigatorProvider.addNavigator(MenuNavigator.create(id, fragmentManager, TYPE_KEEP_STATE))
         setGraph(mGraphId)
         if (view is MenuOwner) {
-            view.setOnIdSelectedListener { navController.navigate(it, options) }
+            view.setOnIdSelectedListener { navController.navigate(it, navOptions = options) }
             navController.setOnNavigateChangeListener { view.selectId(it) }
             navController.navigate(view.getCurrentId())
         } else {
             if (navController.getDestinationCount() < 2) throw RuntimeException("Navigation graph need 2 fragment to setup")
             val navigate: (Boolean) -> Unit = {
                 val destination = navController.getDestinationActivated(view.isActivated)
-                if (it) navController.navigate(destination, options)
+                if (it) navController.navigate(destination, navOptions = options)
                 else navController.navigate(destination)
             }
             navigate(false)
@@ -69,13 +70,13 @@ class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context
 
     fun preformResume() {
         (mFragmentManager!!.primaryNavigationFragment as? BaseFragment)?.apply {
-            viewLife.lifecycle.resume()
+            viewLife.lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         }
     }
 
     fun preformPause() {
         (mFragmentManager!!.primaryNavigationFragment as? BaseFragment)?.apply {
-            viewLife.lifecycle.pause()
+            viewLife.lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         }
     }
 }

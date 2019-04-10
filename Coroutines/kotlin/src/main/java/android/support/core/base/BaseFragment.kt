@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.core.extensions.dispatchHidden
 import android.support.core.extensions.isVisibleOnScreen
 import android.support.core.functional.Backable
+import android.support.core.functional.Dispatcher
 import android.support.core.lifecycle.ResultLifecycle
 import android.support.core.lifecycle.ResultRegistry
 import android.support.core.lifecycle.ViewLifecycleOwner
@@ -15,29 +16,30 @@ import android.view.View
 /**
  * Custom for lifecycle
  */
-abstract class BaseFragment : Fragment(), Backable {
+abstract class BaseFragment : Fragment(), Backable, Dispatcher {
     private val TAG: String = this.javaClass.simpleName
 
     val resultLife: ResultLifecycle = ResultRegistry()
     val viewLife = ViewLifecycleOwner()
+    private val mLifeRegistry get() = viewLife.lifecycle
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewLife.lifecycle.create()
+        mLifeRegistry.create()
         Log.i(TAG, "Created")
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        viewLife.lifecycle.destroy()
+        mLifeRegistry.destroy()
         Log.i(TAG, "Destroy")
     }
 
     override fun onStart() {
         super.onStart()
         if (isVisibleOnScreen()) {
-            onFragmentStarted()
-            viewLife.lifecycle.start()
+            performStartFragment()
+            mLifeRegistry.start()
             Log.i(TAG, "Start")
         }
     }
@@ -45,8 +47,8 @@ abstract class BaseFragment : Fragment(), Backable {
     override fun onStop() {
         super.onStop()
         if (isVisibleOnScreen()) {
-            onFragmentStopped()
-            viewLife.lifecycle.stop()
+            performStopFragment()
+            mLifeRegistry.stop()
             Log.i(TAG, "Stop")
         }
     }
@@ -54,7 +56,7 @@ abstract class BaseFragment : Fragment(), Backable {
     override fun onResume() {
         super.onResume()
         if (isVisibleOnScreen()) {
-            viewLife.lifecycle.resume()
+            mLifeRegistry.resume()
             Log.i(TAG, "Resume")
         }
     }
@@ -62,37 +64,44 @@ abstract class BaseFragment : Fragment(), Backable {
     override fun onPause() {
         super.onPause()
         if (isVisibleOnScreen()) {
-            viewLife.lifecycle.pause()
+            mLifeRegistry.pause()
             Log.i(TAG, "Pause")
         }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         if (hidden) {
-            onFragmentStopped()
-            viewLife.lifecycle.pause().stop()
+            mLifeRegistry.pause().stop()
+            performStopFragment()
             Log.i(TAG, "Hide")
         } else {
-            onFragmentStarted()
-            viewLife.lifecycle.start().resume()
+            mLifeRegistry.start()
+            performStartFragment()
+            mLifeRegistry.resume()
             Log.i(TAG, "Show")
         }
         dispatchHidden(hidden)
     }
 
+    private fun performStopFragment() {
+        (activity as? BaseActivity)?.also { (it.resultLife as ResultRegistry).backPresses.remove(this) }
+        onFragmentStopped()
+    }
+
+    private fun performStartFragment() {
+        (activity as? BaseActivity)?.also { (it.resultLife as ResultRegistry).backPresses.add(this) }
+        onFragmentStarted()
+        arguments?.apply { onNavigateArguments(this) }
+    }
+
     protected open fun onFragmentStarted() {
-        (activity as? android.support.core.base.BaseActivity)?.also {
-            (it.resultLife as ResultRegistry).backPresses.add(this)
-        }
     }
 
     protected open fun onFragmentStopped() {
-        (activity as? android.support.core.base.BaseActivity)?.also {
-            (it.resultLife as ResultRegistry).backPresses.remove(this)
-        }
     }
 
-    override fun onBackPressed() = false
+    open fun onNavigateArguments(bundle: Bundle) {
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

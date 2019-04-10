@@ -17,7 +17,7 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
     val refresh = RefreshEvent<Any>(this)
 
     private val mLife = LifeRegistry(this)
-    private val mScope = MainScope()
+    private val mScope = ViewModelScope()
 
     override fun getLifecycle() = mLife
 
@@ -32,13 +32,15 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
     ) {
         mScope.launch {
             try {
-                loading?.value = true
+                loading?.postValue(true)
                 block()
             } catch (e: CancellationException) {
                 Log.i(this@BaseViewModel.javaClass.name, e.message ?: "Unknown")
             } catch (e: Throwable) {
+                e.printStackTrace()
                 Log.e("CALL_ERROR", "${e.javaClass.name} ${e.message ?: "Unknown"}")
-                error?.value = e
+                @Suppress("UNCHECKED_CAST")
+                (error as? MutableLiveData<Throwable>)?.postValue(e)
             } finally {
                 loading?.postValue(false)
             }
@@ -51,7 +53,7 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
         mScope.coroutineContext.cancel()
     }
 
-    private class MainScope : CoroutineScope {
-        override val coroutineContext: CoroutineContext = Job() + Dispatchers.Main
+    private class ViewModelScope : CoroutineScope {
+        override val coroutineContext: CoroutineContext = Job() + Dispatchers.IO
     }
 }

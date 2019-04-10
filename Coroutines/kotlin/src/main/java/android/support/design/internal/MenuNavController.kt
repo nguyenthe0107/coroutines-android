@@ -29,32 +29,20 @@ class MenuNavController(context: Context) {
         navigatorProvider.addNavigator(NavGraphNavigator(navigatorProvider))
     }
 
+    fun navigate(@IdRes hostId: Int, @IdRes childId: Int) {
+        mNavigator.navigate(mNavGraph.findDestination(hostId), childId, null, null)
+    }
+
     fun navigate(@NonNull directions: NavDirections) {
-        navigate(directions.actionId, directions.arguments, null)
+        navigate(directions.actionId, directions.arguments)
     }
 
-    fun navigate(@IdRes destinationId: Int) {
-        navigate(destinationId, null)
-    }
-
-    fun navigate(@IdRes destinationId: Int, navOptions: NavOptions?) {
-        navigate(destinationId, null, navOptions)
-    }
-
-    fun navigate(@IdRes destinationId: Int, args: Bundle?, navOptions: NavOptions?) {
+    fun navigate(@IdRes destinationId: Int, args: Bundle? = null, navOptions: NavOptions? = null) {
         if (mNavGraphId == 0) throw RuntimeException("Not set fragment manager yet!")
         navigate(mNavGraph.findDestination(destinationId), args, navOptions)
     }
 
-    fun navigate(destination: MenuNavigator.Destination) {
-        navigate(destination, null)
-    }
-
-    fun navigate(destination: MenuNavigator.Destination, navOptions: NavOptions?) {
-        navigate(destination, null, navOptions)
-    }
-
-    fun navigate(destination: MenuNavigator.Destination, args: Bundle?, navOptions: NavOptions?) {
+    fun navigate(destination: MenuNavigator.Destination, args: Bundle? = null, navOptions: NavOptions? = null) {
         mNavigator.navigate(destination, args, navOptions, null)
     }
 

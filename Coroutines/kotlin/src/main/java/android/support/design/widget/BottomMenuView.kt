@@ -1,15 +1,18 @@
 package android.support.design.widget
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.os.Parcel
 import android.os.Parcelable
 import android.support.R
+import android.support.annotation.LayoutRes
 import android.support.annotation.MenuRes
-import android.support.design.internal.getMenu
 import android.support.core.functional.MenuOwner
+import android.support.design.internal.getMenu
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.util.AttributeSet
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -27,12 +30,34 @@ class BottomMenuView : TabLayout, MenuOwner {
         init(attrs)
     }
 
+    private var mMenu: Menu? = null
+
     private fun init(attrs: AttributeSet?) {
         if (attrs == null) return
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.BottomMenuView)
         val menuId = typedArray.getResourceId(R.styleable.BottomMenuView_tabMenu, 0)
+        val isCustom = typedArray.getBoolean(R.styleable.BottomMenuView_tabCustom, false)
         typedArray.recycle()
-        if (menuId != 0) setMenu(menuId)
+        mMenu = context.getMenu(menuId)
+        if (!isCustom || isInEditMode) {
+            setMenu(menuId)
+        }
+    }
+
+    fun setAdapter(adapter: Adapter) {
+        if (mMenu == null) return
+        for (i in 0 until mMenu!!.size()) {
+            val item = mMenu!!.getItem(i)
+            val tab = newTab().setTag(item.itemId)
+            val viewHolder = adapter.onCreateViewHolder(item, i)
+            tab.setCustomView(viewHolder.layoutId)
+            viewHolder.itemView = tab.customView!!
+            viewHolder.menuView = this
+            viewHolder.position = i
+            viewHolder.bind(item)
+            if (item.isChecked) tab.select()
+            addTab(tab, i)
+        }
     }
 
     override fun getCurrentId() = getTabAt(selectedTabPosition)!!.tag as Int
@@ -109,11 +134,24 @@ class BottomMenuView : TabLayout, MenuOwner {
         })
     }
 
-    private fun setMenu(@MenuRes menuId: Int) {
+    /**
+     * Set Menu with default layout R.layout.view_tab_menu
+     */
+    fun setMenu(@MenuRes menuId: Int) {
         val menu = context.getMenu(menuId)
         for (i in 0 until menu.size()) {
             addMenu(menu.getItem(i), i)
         }
+    }
+
+    fun getTabTextSize() = tabTextSize
+
+    fun setIconTintMode(drawable: Drawable) {
+        if (tabIconTintMode != null) DrawableCompat.setTintMode(drawable, tabIconTintMode)
+    }
+
+    fun setIconTintList(drawable: Drawable) {
+        DrawableCompat.setTintList(drawable, tabIconTint)
     }
 
     private fun addMenu(item: MenuItem, position: Int) {
@@ -129,8 +167,8 @@ class BottomMenuView : TabLayout, MenuOwner {
             if (tabTextColors != null) textView.setTextColor(tabTextColors)
         }
         item.icon?.apply {
-            DrawableCompat.setTintList(this, tabIconTint)
-            if (tabIconTintMode != null) DrawableCompat.setTintMode(this, tabIconTintMode)
+            setIconTintList(this)
+            setIconTintMode(this)
             iconView.setImageDrawable(this)
         }
         if (item.isChecked) tab.select()
@@ -192,11 +230,14 @@ class BottomMenuView : TabLayout, MenuOwner {
         }
     }
 
-    class OnAttachListener(private val function: () -> Unit) : OnAttachStateChangeListener {
-        override fun onViewAttachedToWindow(p0: View?) {
-            function()
-        }
+    abstract class Adapter {
+        abstract fun onCreateViewHolder(item: MenuItem, position: Int): ViewHolder
+    }
 
-        override fun onViewDetachedFromWindow(p0: View?) {}
+    abstract class ViewHolder(@LayoutRes val layoutId: Int) {
+        lateinit var menuView: BottomMenuView
+        lateinit var itemView: View
+        var position: Int = -1
+        abstract fun bind(item: MenuItem)
     }
 }

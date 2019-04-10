@@ -1,7 +1,6 @@
 package com.kantek.coroutines.repository
 
 import android.support.core.di.Repository
-import android.support.core.extensions.withIO
 import android.support.core.helpers.TemporaryData
 import com.kantek.coroutines.datasource.ApiService
 import com.kantek.coroutines.datasource.AppCache
@@ -17,12 +16,9 @@ class AlbumRepository(
     private val mAlbums = TemporaryData<String, MutableList<Album>>(1, TimeUnit.MINUTES)
     private val mPhotos = TemporaryData<String, MutableList<Photo>>(1, TimeUnit.MINUTES)
 
-    suspend fun getAlbums() = withIO {
-        val userId = appCache.user!!.id
-        mAlbums.getOrLoad(userId) { apiService.getAlbums().call() }
-    }
+    fun getAlbums() =
+        mAlbums.getOrLoad(appCache.user!!.id) { apiService.getAlbums().call() }
 
-    suspend fun getPhotos(albumId: String) = withIO {
+    fun getPhotos(albumId: String) =
         mPhotos.getOrLoad(albumId) { apiService.getPhotos(albumId).call() }
-    }
 }

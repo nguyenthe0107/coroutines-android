@@ -1,11 +1,12 @@
 package android.support.core.base
 
 import android.content.Intent
+import android.support.core.functional.Dispatcher
 import android.support.core.lifecycle.ResultLifecycle
 import android.support.core.lifecycle.ResultRegistry
 import android.support.v7.app.AppCompatActivity
 
-abstract class BaseActivity : AppCompatActivity() {
+abstract class BaseActivity : AppCompatActivity(), Dispatcher {
 
     val resultLife: ResultLifecycle = ResultRegistry()
 

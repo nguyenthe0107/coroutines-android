@@ -2,12 +2,29 @@ package android.support.core.event
 
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
-import android.support.core.extensions.call
+import android.arch.lifecycle.MediatorLiveData
 
-open class RefreshEvent<T>(private val owner: LifecycleOwner) : MutableLiveData<T>() {
-    open fun addEvent(event: ForwardEvent<out Any, out Any>) {
-        event.observe(owner, this::onEvent)
+open class RefreshEvent<T>(
+    private val owner: LifecycleOwner,
+    /**
+     * In milliseconds
+     */
+    private val timeRate: Long = 0
+) : MediatorLiveData<T>() {
+    private var mOnActivated: (() -> Unit)? = null
+    private var mActivated = false
+    private var mLastCalled = 0
+
+    open fun addEvent(event: ForwardEvent<out Any, out Any>, function: ((Any?) -> Unit)? = null) {
+        event.observe(owner) {
+            if (function != null) function(it) else onEvent(it)
+        }
+    }
+
+    open fun addEvent(event: LiveData<out Any>, function: ((Any?) -> Unit)? = null) {
+        addSource(event) {
+            if (function != null) function(it) else onEvent(it)
+        }
     }
 
     /**
@@ -15,10 +32,10 @@ open class RefreshEvent<T>(private val owner: LifecycleOwner) : MutableLiveData<
      * @param data list of LiveData - Check if data is not set value or not loaded yet
      * then call refresh to notify observers
      */
-    fun addEvent(event: ForwardEvent<out Any, out Any>, vararg data: LiveData<out Any>) {
+    fun addEvent(event: ForwardEvent<out Any, out Any>, vararg data: LiveData<out Any?>, function: ((Any?) -> Unit)? = null) {
         event.observe(owner) {
             val shouldRefresh = data.fold(false) { acc, item -> acc || item.value == null }
-            if (shouldRefresh) onEvent(it)
+            if (shouldRefresh) if (function != null) function(it) else onEvent(it)
         }
     }
 
@@ -26,6 +43,34 @@ open class RefreshEvent<T>(private val owner: LifecycleOwner) : MutableLiveData<
         call()
     }
 
+    fun onActivated(function: RefreshEvent<T>.() -> Unit): MediatorLiveData<T> {
+        return MediatorLiveData<T>().also { next ->
+            next.addSource(this) {
+                activate(function)
+                next.value = it
+            }
+        }
+    }
+
+    private fun activate(function: RefreshEvent<T>.() -> Unit) {
+        synchronized(this) {
+            if (!mActivated) {
+                mActivated = true
+                function(this)
+            }
+        }
+    }
+
+    fun callIfNotActivated() {
+        if (!mActivated) call()
+    }
+
+    fun call() {
+        if (timeRate > 0) {
+            if (System.currentTimeMillis() - mLastCalled < timeRate) return
+        }
+        value = value
+    }
 }
 
 class RequestEvent<T>(owner: LifecycleOwner) : RefreshEvent<T>(owner) {

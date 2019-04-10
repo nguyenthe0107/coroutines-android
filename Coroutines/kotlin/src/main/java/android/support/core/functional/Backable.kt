@@ -1,5 +1,5 @@
 package android.support.core.functional
 
 interface Backable {
-    fun onBackPressed(): Boolean
+    fun onBackPressed(): Boolean = false
 }

@@ -1,7 +1,6 @@
 package com.kantek.coroutines.repository
 
 import android.support.core.di.Repository
-import android.support.core.extensions.withIO
 import android.support.core.helpers.TemporaryData
 import com.kantek.coroutines.app.UpdateException
 import com.kantek.coroutines.datasource.ApiService
@@ -27,18 +26,15 @@ class TodoRepository(
         override fun loadFromCache(key: String) = appDatabase.todoDao().gets(key)
     }
 
-    suspend fun getTodos() = withIO {
-        val userId = appCache.user!!.id
-        mTodos.getOrLoad(userId) { apiService.getTodos().call() }
-    }
+    fun getTodos(): MutableList<Todo> =
+        mTodos.getOrLoad(appCache.user!!.id) { apiService.getTodos().call() }
 
-    suspend fun update(todo: Todo, vararg body: Pair<String, String>) = withIO {
+    fun update(todo: Todo, vararg body: Pair<String, String>) =
         apiService.updateTodo(todo.id, body.toMap())
             .tryCall { throw UpdateException(this, todo) }
             .let {
                 appDatabase.todoDao().save(it!!)
                 todo copy it
             }
-    }
 
 }

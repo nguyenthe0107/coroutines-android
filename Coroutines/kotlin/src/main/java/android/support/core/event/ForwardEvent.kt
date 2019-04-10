@@ -4,29 +4,44 @@ import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.OnLifecycleEvent
+import android.support.core.base.BaseFragment
+import android.support.v4.app.Fragment
 
 abstract class ForwardEvent<T : Any, K : Any> {
+    private val mOwners = hashMapOf<LifecycleOwner, MutableMap<(T?) -> Unit, Notify<*>>>()
+
     open fun observe(owner: LifecycleOwner, function: (T?) -> Unit) {
-        ForwardEvent.Notify(owner, function).apply {
+        if (!mOwners.containsKey(owner)) {
+            mOwners[owner] = hashMapOf()
+        }
+        mOwners[owner]!![function] = Notify(owner, function).apply {
             val event = registry(this)
-            onDestroy = { unRegistry(event) }
+            onDestroy = {
+                unRegistry(event)
+                mOwners.remove(owner)
+            }
         }
     }
 
-    protected abstract fun registry(notify: ForwardEvent.Notify<T?>): K
+    protected abstract fun registry(notify: Notify<T?>): K
 
     protected abstract fun unRegistry(event: K)
 
-    class Notify<T>(private val owner: LifecycleOwner, private val function: (T?) -> Unit) {
+    class Notify<T>(owner: LifecycleOwner, private val function: (T?) -> Unit) {
         private var isCalled: Boolean = false
         private var mValue: T? = null
         internal var onDestroy: (() -> Unit)? = null
+        private var mLifecycle = when (owner) {
+            is BaseFragment -> owner.viewLife
+            is Fragment -> owner.viewLifecycleOwner
+            else -> owner
+        }.lifecycle
 
         init {
-            owner.lifecycle.addObserver(object : LifecycleObserver {
+            mLifecycle.addObserver(object : LifecycleObserver {
                 @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
                 fun onDestroy() {
-                    owner.lifecycle.removeObserver(this)
+                    mLifecycle.removeObserver(this)
                     onDestroy?.invoke()
                 }
 
@@ -44,7 +59,7 @@ abstract class ForwardEvent<T : Any, K : Any> {
         }
 
         fun call(value: T?) {
-            if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            if (mLifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                 function(value)
             } else {
                 synchronized(isCalled) {

@@ -2,11 +2,11 @@ package com.kantek.coroutines.views
 
 import android.os.Bundle
 import android.support.core.annotations.LayoutId
-import android.support.core.base.BaseFragment
 import android.support.core.extensions.argument
 import android.support.core.extensions.asArgument
 import android.support.core.extensions.observe
 import android.support.core.extensions.open
+import android.support.core.functional.Dispatcher
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppActivity
 import com.kantek.coroutines.models.Album
@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.activity_album_detail.*
 @LayoutId(R.layout.activity_album_detail)
 class AlbumDetailActivity : AppActivity<AlbumViewModel>() {
     companion object {
-        fun show(from: BaseFragment, it: Album) {
+        fun show(from: Dispatcher, it: Album) {
             from.open(AlbumDetailActivity::class, it.asArgument())
         }
     }
