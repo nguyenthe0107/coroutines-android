@@ -85,7 +85,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         when (fragment) {
             is BaseFragment -> {
                 fragment.arguments = args
-                fragment.onNavigateArguments(args)
+                fragment.handleNavigateArguments(args)
             }
             is MenuHostFragment -> {
                 fragment.addArgs(args)

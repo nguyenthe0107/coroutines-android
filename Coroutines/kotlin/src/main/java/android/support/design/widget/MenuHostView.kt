@@ -5,10 +5,11 @@ import android.arch.lifecycle.Lifecycle
 import android.content.Context
 import android.support.annotation.NavigationRes
 import android.support.core.base.BaseFragment
+import android.support.core.functional.MenuOwner
 import android.support.design.internal.MenuNavController
 import android.support.design.internal.MenuNavigator
 import android.support.design.internal.TYPE_KEEP_STATE
-import android.support.core.functional.MenuOwner
+import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.util.AttributeSet
 import android.view.View
@@ -22,7 +23,8 @@ class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context
 
     init {
         loadAttrs(attrs)
-        rootView.setTag(android.support.R.string.nav_menu_controller_view_tag, navController)
+        setTag(android.support.R.string.nav_menu_controller_view_tag, navController)
+        tag = android.support.R.string.nav_menu_controller_view_tag
     }
 
     @SuppressLint("CustomViewStyleable")
@@ -77,6 +79,18 @@ class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context
     fun preformPause() {
         (mFragmentManager!!.primaryNavigationFragment as? BaseFragment)?.apply {
             viewLife.lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        }
+    }
+
+    companion object {
+        fun findNavController(fragment: Fragment): MenuNavController? {
+            val view = fragment.view
+            if (view != null) {
+                val hostView = view.findViewWithTag<MenuHostView>(android.support.R.string.nav_menu_controller_view_tag)
+                if (hostView != null) return hostView.navController
+            }
+            if (fragment.parentFragment != null) return findNavController(fragment.parentFragment!!)
+            return null
         }
     }
 }

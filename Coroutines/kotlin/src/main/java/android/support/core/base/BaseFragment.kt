@@ -6,6 +6,7 @@ import android.support.core.extensions.dispatchHidden
 import android.support.core.extensions.isVisibleOnScreen
 import android.support.core.functional.Backable
 import android.support.core.functional.Dispatcher
+import android.support.core.functional.Navigable
 import android.support.core.lifecycle.ResultLifecycle
 import android.support.core.lifecycle.ResultRegistry
 import android.support.core.lifecycle.ViewLifecycleOwner
@@ -16,7 +17,7 @@ import android.view.View
 /**
  * Custom for lifecycle
  */
-abstract class BaseFragment : Fragment(), Backable, Dispatcher {
+abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
     private val TAG: String = this.javaClass.simpleName
 
     val resultLife: ResultLifecycle = ResultRegistry()
@@ -91,16 +92,13 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher {
     private fun performStartFragment() {
         (activity as? BaseActivity)?.also { (it.resultLife as ResultRegistry).backPresses.add(this) }
         onFragmentStarted()
-        arguments?.apply { onNavigateArguments(this) }
+        arguments?.apply { handleNavigateArguments(this) }
     }
 
     protected open fun onFragmentStarted() {
     }
 
     protected open fun onFragmentStopped() {
-    }
-
-    open fun onNavigateArguments(bundle: Bundle) {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
