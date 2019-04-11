@@ -13,7 +13,7 @@ open class RefreshEvent<T>(
 ) : MediatorLiveData<T>() {
     private var mOnActivated: (() -> Unit)? = null
     private var mActivated = false
-    private var mLastCalled = 0
+    private var mLastCalled = 0L
 
     open fun addEvent(event: ForwardEvent<out Any, out Any>, function: ((Any?) -> Unit)? = null) {
         event.observe(owner) {
@@ -67,7 +67,9 @@ open class RefreshEvent<T>(
 
     fun call() {
         if (timeRate > 0) {
-            if (System.currentTimeMillis() - mLastCalled < timeRate) return
+            val current = System.currentTimeMillis()
+            if (current - mLastCalled < timeRate) return
+            mLastCalled = current
         }
         value = value
     }

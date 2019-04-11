@@ -31,7 +31,8 @@ class TodoRepository(
 
     fun update(todo: Todo, vararg body: Pair<String, String>) =
         apiService.updateTodo(todo.id, body.toMap())
-            .tryCall { throw UpdateException(this, todo) }
+//            .tryCall { throw UpdateException(this, todo) }
+            .call()
             .let {
                 appDatabase.todoDao().save(it!!)
                 todo copy it

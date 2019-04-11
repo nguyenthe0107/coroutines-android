@@ -24,7 +24,11 @@ class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context
     init {
         loadAttrs(attrs)
         setTag(android.support.R.string.nav_menu_controller_view_tag, navController)
-        tag = android.support.R.string.nav_menu_controller_view_tag
+        super.setTag(android.support.R.string.nav_menu_controller_view_tag)
+    }
+
+    override fun setTag(tag: Any?) {
+        throw RuntimeException("Not support set tag for MenuHostView")
     }
 
     @SuppressLint("CustomViewStyleable")

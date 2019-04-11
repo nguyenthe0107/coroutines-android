@@ -29,21 +29,19 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
         loading: MutableLiveData<Boolean>? = this@BaseViewModel.loading,
         error: SingleLiveEvent<out Throwable>? = this@BaseViewModel.error,
         block: suspend CoroutineScope.() -> Unit
-    ) {
-        mScope.launch {
-            try {
-                loading?.postValue(true)
-                block()
-            } catch (e: CancellationException) {
-                Log.i(this@BaseViewModel.javaClass.name, e.message ?: "Unknown")
-            } catch (e: Throwable) {
-                e.printStackTrace()
-                Log.e("CALL_ERROR", "${e.javaClass.name} ${e.message ?: "Unknown"}")
-                @Suppress("UNCHECKED_CAST")
-                (error as? MutableLiveData<Throwable>)?.postValue(e)
-            } finally {
-                loading?.postValue(false)
-            }
+    ) = mScope.launch {
+        try {
+            loading?.postValue(true)
+            block()
+        } catch (e: CancellationException) {
+            Log.i(this@BaseViewModel.javaClass.name, e.message ?: "Unknown")
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            Log.e("CALL_ERROR", "${e.javaClass.name} ${e.message ?: "Unknown"}")
+            @Suppress("UNCHECKED_CAST")
+            (error as? MutableLiveData<Throwable>)?.postValue(e)
+        } finally {
+            loading?.postValue(false)
         }
     }
 

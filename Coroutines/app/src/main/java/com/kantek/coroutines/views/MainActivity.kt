@@ -23,7 +23,7 @@ class MainActivity : AppActivity<MainViewModel>() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        open(LoginActivity::class).close()
+        LoginActivity.show(this)
         return super.onOptionsItemSelected(item)
     }
 

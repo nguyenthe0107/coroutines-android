@@ -32,7 +32,7 @@ class ProfileFragment : AppFragment<MainViewModel>() {
         txtName.setOnClickListener { mDialog.show(it.id, txtName.text.toString()) }
         txtEmail.setOnClickListener { mDialog.show(it.id, txtEmail.text.toString()) }
         txtPhone.setOnClickListener { mDialog.show(it.id, txtPhone.text.toString()) }
-        mDialog.onOkClickListener = { viewModel.updateProfile.value = it }
+        mDialog.onOkClickListener = { viewModel.updateProfile(it) }
     }
 
 }

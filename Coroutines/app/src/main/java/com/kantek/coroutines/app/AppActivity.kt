@@ -18,6 +18,7 @@ import android.view.View
 import android.widget.Toast
 import com.kantek.coroutines.R
 import com.kantek.coroutines.datasource.AppEvent
+import com.kantek.coroutines.views.LoginActivity
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
@@ -32,28 +33,29 @@ abstract class AppActivity<VM : BaseViewModel> : BaseActivity() {
     }
     private val mLoadingView: View? by lazy { findViewById<View>(R.id.viewLoading) }
     val appEvent: AppEvent by inject()
-
-    @Suppress("UNCHECKED_CAST")
-    val viewModel: VM by lazy {
-        ViewModelProviders
-            .of(this, ViewModelFactory.sInstance)
-            .get(getFirstGenericParameter()) as VM
-    }
+    lateinit var viewModel: VM
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getAnnotation<LayoutId>()?.apply { setContentView(value) }
+        @Suppress("UNCHECKED_CAST")
+        viewModel = ViewModelProviders.of(this, ViewModelFactory.sInstance).get(getFirstGenericParameter()) as VM
         rootView = findViewById<View>(android.R.id.content)
-        viewModel.loading.observe(this) { showLoading(it) }
+        viewModel.loading.observe(this, this::showLoading)
         viewModel.error.observe(this, this::handleError)
     }
 
-    fun showLoading(it: Boolean?) {
+    private fun showLoading(it: Boolean?) {
         mLoadingView?.visibility = if (it!!) View.VISIBLE else View.GONE
     }
 
     fun handleError(error: Throwable?) {
         when (error) {
+            is TokenException -> {
+                if (isFinishing) return
+                LoginActivity.show(this)
+            }
             is ResourceException -> toast(error.resource)
             is SocketTimeoutException -> toast(R.string.error_request_timeout)
             is SnackException -> Snackbar.make(rootView, error.resource, Snackbar.LENGTH_SHORT).show()

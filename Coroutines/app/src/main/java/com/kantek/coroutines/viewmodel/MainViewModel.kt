@@ -2,7 +2,6 @@ package com.kantek.coroutines.viewmodel
 
 import android.support.core.event.SingleLiveEvent
 import android.support.core.extensions.map
-import android.support.core.extensions.submit
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppViewModel
 import com.kantek.coroutines.app.UpdateException
@@ -18,12 +17,11 @@ class MainViewModel(
     postRepository: PostRepository,
     todoRepository: TodoRepository,
     albumRepository: AlbumRepository,
-    userRepository: UserRepository,
+    private val userRepository: UserRepository,
     appCache: AppCache,
     appEvent: AppEvent
 ) : AppViewModel() {
     val profile = appCache.userLive
-    val updateProfile = SingleLiveEvent<Pair<Int, String>>()
     val updateTodo = SingleLiveEvent<Todo>()
     val updateTodoError = SingleLiveEvent<UpdateException>()
 
@@ -39,20 +37,21 @@ class MainViewModel(
         todoRepository.getTodos()
     }
 
-    val updateTodoSuccess = updateTodo.map(this, error = updateTodoError) {
+    val updateTodoSuccess = updateTodo.map(this) {
         todoRepository.update(it!!, "completed" to (!it.completed).toString())
     }
 
+    fun updateProfile(it: Pair<Int, String>) = launch(loading = null) {
+        val body = when (it.first) {
+            R.id.txtName -> "name" to it.second
+            R.id.txtEmail -> "email" to it.second
+            R.id.txtPhone -> "phone" to it.second
+            else -> error("Field not found Id@${it.first}")
+        }
+        userRepository.update(body)
+    }
+
     init {
-        updateProfile.map(this, loading = null) {
-            val body = when (it!!.first) {
-                R.id.txtName -> "name" to it.second
-                R.id.txtEmail -> "email" to it.second
-                R.id.txtPhone -> "phone" to it.second
-                else -> error("Not found field")
-            }
-            userRepository.update(body)
-        }.submit(this)
         refresh.addEvent(appEvent.networkChanged, posts, albums, todos)
     }
 }

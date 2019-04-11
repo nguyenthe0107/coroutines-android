@@ -15,12 +15,13 @@ import android.support.core.factory.ViewModelFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import com.kantek.coroutines.R
 
 abstract class AppFragment<VM : BaseViewModel> : BaseFragment() {
     lateinit var viewModel: VM
     private var mLoadingView: View? = null
+
+    val appActivity get() = activity as AppActivity<*>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,10 +36,8 @@ abstract class AppFragment<VM : BaseViewModel> : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
         mLoadingView = view.findViewById(R.id.viewLoading)
         if (viewModel != (activity as? AppActivity<*>)?.viewModel) {
-            viewModel.loading.observe(this) { showLoading(it) }
-            viewModel.error.observe(this) {
-                (activity as AppActivity<*>).handleError(it)
-            }
+            viewModel.loading.observe(this, this::showLoading)
+            viewModel.error.observe(this, appActivity::handleError)
         }
     }
 
@@ -50,11 +49,7 @@ abstract class AppFragment<VM : BaseViewModel> : BaseFragment() {
         return inflater.inflate(getAnnotation<LayoutId>()!!.value, container, false)
     }
 
-    fun toast(@StringRes res: Int) {
-        Toast.makeText(activity, res, Toast.LENGTH_SHORT).show()
-    }
+    fun toast(@StringRes res: Int) = appActivity.toast(res)
 
-    fun toast(text: String) {
-        Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
-    }
+    fun toast(text: String) = appActivity.toast(text)
 }
