@@ -1,6 +1,7 @@
 package android.support.core.extensions
 
 import android.arch.lifecycle.*
+import android.os.Looper
 import android.support.core.base.BaseFragment
 import android.support.core.base.BaseViewModel
 import android.support.core.event.SingleLiveEvent
@@ -16,12 +17,15 @@ fun <T> LiveData<T>.observe(owner: LifecycleOwner, function: (T?) -> Unit) {
     }
 }
 
+private fun isRunOnMainThread() = Looper.myLooper() == Looper.getMainLooper()
+
 fun <T> MutableLiveData<T>.call() {
-    value = value
+    if (isRunOnMainThread()) value = value
+    else postValue(value)
 }
 
 fun <T> MutableLiveData<T>.refresh() {
-    if (value != null) value = value
+    if (value != null) if (isRunOnMainThread()) value = value else postValue(value)
 }
 
 fun <T> MutableLiveData<T>.loadOnDisk(function: () -> T?): LiveData<T> {
@@ -29,25 +33,22 @@ fun <T> MutableLiveData<T>.loadOnDisk(function: () -> T?): LiveData<T> {
     return this
 }
 
-fun <T, V> LiveData<T>.map(function: (T?) -> V?): LiveData<V> {
-    return MediatorLiveData<V>().also { next ->
+fun <T, V> LiveData<T>.map(function: (T?) -> V?): LiveData<V> =
+    MediatorLiveData<V>().also { next ->
         next.addSource(this) {
             next.value = function(it)
         }
     }
-}
 
-fun <T, V> LiveData<T>.switchMap(function: (T?) -> LiveData<V>) = Transformations.switchMap(this) {
-    function(it)
-}
+fun <T, V> LiveData<T>.switchMap(function: (T?) -> LiveData<V>) =
+    Transformations.switchMap(this, function)
 
-fun <T, V> LiveData<T>.mapLive(function: MutableLiveData<V>.(T?) -> Unit): LiveData<V> {
-    val next = MediatorLiveData<V>()
-    next.addSource(this) {
-        function(next, it)
+fun <T, V> LiveData<T>.mapLive(function: MutableLiveData<V>.(T?) -> Unit): LiveData<V> =
+    MediatorLiveData<V>().also { next ->
+        next.addSource(this) {
+            function(next, it)
+        }
     }
-    return next
-}
 
 fun <T, V> LiveData<T>.map(
     viewModel: BaseViewModel,

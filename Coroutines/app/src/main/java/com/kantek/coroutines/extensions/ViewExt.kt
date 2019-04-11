@@ -15,7 +15,12 @@ fun View.hide() {
     visibility = View.GONE
 }
 
-fun TextView.setupStatusChanged(it: Boolean, delay: Handler) {
+fun TextView.setupStatusChanged(it: Boolean) {
+    var delay = tag as? Handler
+    if (delay == null) {
+        delay = Handler()
+        tag = delay
+    }
     if (it) {
         setText(R.string.warning_online)
         setBackgroundResource(R.color.colorPrimary)

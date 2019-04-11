@@ -11,6 +11,7 @@ import android.support.core.extensions.getFirstGenericParameter
 import android.support.core.extensions.inject
 import android.support.core.extensions.observe
 import android.support.core.factory.ViewModelFactory
+import android.support.core.helpers.AppSettings
 import android.support.core.utils.DriverUtils
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
@@ -24,24 +25,30 @@ import java.net.UnknownHostException
 
 
 abstract class AppActivity<VM : BaseViewModel> : BaseActivity() {
-    lateinit var rootView: View
     private val mAlertDialog: AlertDialog by lazy {
         AlertDialog.Builder(this)
             .setPositiveButton("Ok", null)
             .setCancelable(true)
             .create()
     }
-    private val mLoadingView: View? by lazy { findViewById<View>(R.id.viewLoading) }
-    val appEvent: AppEvent by inject()
     lateinit var viewModel: VM
         private set
+    private var mLoadingView: View? = null
+    lateinit var rootView: View
+
+    val appEvent: AppEvent by inject()
+    val appPermission by lazy { AppPermission(this) }
+    val appSettings by lazy { AppSettings(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getAnnotation<LayoutId>()?.apply { setContentView(value) }
         @Suppress("UNCHECKED_CAST")
         viewModel = ViewModelProviders.of(this, ViewModelFactory.sInstance).get(getFirstGenericParameter()) as VM
-        rootView = findViewById<View>(android.R.id.content)
+
+        mLoadingView = findViewById(R.id.viewLoading)
+        rootView = findViewById(android.R.id.content)
+
         viewModel.loading.observe(this, this::showLoading)
         viewModel.error.observe(this, this::handleError)
     }

@@ -54,11 +54,7 @@ class AppModule {
 
     @Provide
     fun provideGsonConvertFactory() = GsonConverterFactory
-        .create(
-            GsonBuilder()
-                .setDateFormat("yyyy-MM-dd hh:mm:ss")
-                .create()
-        )!!
+        .create(GsonBuilder().setDateFormat("yyyy-MM-dd hh:mm:ss").create())!!
 
     @Provide
     fun provideApiService(
