@@ -15,6 +15,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
 import java.io.IOException
 import java.util.*
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 
 abstract class MyLocation(val context: Context,
@@ -31,6 +33,10 @@ abstract class MyLocation(val context: Context,
     abstract fun requestUpdate()
 
     abstract fun removeUpdate()
+
+    suspend fun getLastLocation() = suspendCoroutine<Location> { con ->
+        loadLastLocation { con.resume(it) }
+    }
 
     fun getFullAddress(latitude: Double, longitude: Double): Address? {
         return try {

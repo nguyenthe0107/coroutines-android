@@ -11,7 +11,7 @@ abstract class AppDatabase : RoomDatabase() {
 @Dao
 interface TodoDao {
     @Query("select * from Todo where userId=:userId")
-    fun gets(userId: String): MutableList<Todo>?
+    fun gets(userId: String): MutableList<Todo>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun saveAll(value: MutableList<Todo>)

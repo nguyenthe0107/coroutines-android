@@ -7,9 +7,10 @@ import android.content.Context
 import android.support.core.di.Provide
 import android.support.core.factory.TLSSocketFactory
 import com.google.gson.GsonBuilder
-import com.ihsanbal.logging.Level
-import com.ihsanbal.logging.LoggingInterceptor
 import com.kantek.coroutines.BuildConfig
+import com.kantek.coroutines.app.interceptor.Logger
+import com.kantek.coroutines.app.interceptor.LoggingInterceptor
+import com.kantek.coroutines.app.interceptor.TokenInterceptor
 import com.kantek.coroutines.datasource.ApiService
 import com.kantek.coroutines.datasource.AppDatabase
 import okhttp3.OkHttpClient
@@ -19,35 +20,24 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class AppModule {
     @Provide
-    fun provideInterceptorBuilder(): LoggingInterceptor.Builder = LoggingInterceptor.Builder()
+    fun provideLoggingInterceptor(): LoggingInterceptor = LoggingInterceptor.Builder()
         .loggable(BuildConfig.DEBUG)
-        .setLevel(Level.BASIC)
+        .setLevel(Logger.Level.BASIC)
         .log(Platform.INFO)
         .request("Request")
         .response("Response")
-
-    @Provide
-    fun provideOkHttpClientBuilder(): OkHttpClient.Builder {
-        val tslFactory = TLSSocketFactory()
-        return OkHttpClient.Builder().sslSocketFactory(tslFactory, tslFactory.systemDefaultTrustManager())
-    }
-
-    @Provide
-    fun provideRetrofitBuilder(gsonConverterFactory: GsonConverterFactory) = Retrofit.Builder()
-        .addConverterFactory(gsonConverterFactory)!!
-
-    @Provide
-    fun provideInterceptor(builder: LoggingInterceptor.Builder): LoggingInterceptor = builder
         .addHeader("Content-Type", "application/json")
         .build()
 
     @Provide
     fun provideOkHttpClient(
-        client: OkHttpClient.Builder,
         loggingInterceptor: LoggingInterceptor,
         token: TokenInterceptor
     ): OkHttpClient {
-        return client.addInterceptor(loggingInterceptor)
+        val tslFactory = TLSSocketFactory()
+        return OkHttpClient.Builder()
+            .sslSocketFactory(tslFactory, tslFactory.systemDefaultTrustManager())
+            .addInterceptor(loggingInterceptor)
             .addInterceptor(token)
             .build()
     }
@@ -57,12 +47,16 @@ class AppModule {
         .create(GsonBuilder().setDateFormat("yyyy-MM-dd hh:mm:ss").create())!!
 
     @Provide
-    fun provideApiService(
-        retrofitBuilder: Retrofit.Builder,
+    fun provideRetrofitBuilder(
+        gsonConverterFactory: GsonConverterFactory,
         client: OkHttpClient
-    ) = retrofitBuilder
+    ) = Retrofit.Builder()
+        .addConverterFactory(gsonConverterFactory)
+        .client(client)!!
+
+    @Provide
+    fun provideApiService(retrofitBuilder: Retrofit.Builder) = retrofitBuilder
         .baseUrl("http://jsonplaceholder.typicode.com/")
-        .client(client)
         .build()
         .create(ApiService::class.java)!!
 

@@ -35,7 +35,7 @@ internal abstract class RegistryBean(
         try {
             return onCreateNewInstance(lookupArguments(getParameterTypes()))
         } catch (e: Exception) {
-            throw RuntimeException(e)
+            throw RuntimeException(clazz.name, e)
         }
     }
 

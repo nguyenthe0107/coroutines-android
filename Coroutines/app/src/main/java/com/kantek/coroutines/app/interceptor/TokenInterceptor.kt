@@ -1,4 +1,4 @@
-package com.kantek.coroutines.app
+package com.kantek.coroutines.app.interceptor
 
 import android.support.core.di.Inject
 import com.kantek.coroutines.datasource.AppCache

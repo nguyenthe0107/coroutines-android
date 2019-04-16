@@ -42,9 +42,7 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:$retrofitVerion"
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVerion"
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
-    implementation("com.github.ihsanbal:LoggingInterceptor:$interceptorVersion") {
-        exclude group: 'org.json', module: 'json'
-    }
+
     implementation "com.android.support:design:$supportVersion"
     implementation "com.android.support:support-v4:$supportVersion"
 
