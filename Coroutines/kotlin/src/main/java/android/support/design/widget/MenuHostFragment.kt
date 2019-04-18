@@ -4,11 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.support.annotation.NavigationRes
+import android.support.core.extensions.isVisibleOnScreen
 import android.support.core.functional.MenuOwner
 import android.support.design.internal.MenuNavController
 import android.support.design.internal.MenuNavigator
 import android.support.design.internal.TYPE_KEEP_STATE
-import android.support.design.internal.addBundle
 import android.support.v4.app.Fragment
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -52,25 +52,25 @@ class MenuHostFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val menuId = arguments?.getInt(KEY_MENU_ID) ?: 0
+        if (arguments == null) {
+            navController!!.navigateToStart()
+            return
+        }
+
+        val menuId = arguments!!.getInt(KEY_MENU_ID, 0)
         if (menuId != 0) setMenu(menuId)
-        handleArguments()
+        if (navigateIfNeeded()) return
+        if (menuId != 0) mOnActivityCreatedListener?.invoke() else navController!!.navigateToStart()
     }
 
-    fun handleArguments() {
-        val menuId = arguments?.getInt(KEY_MENU_ID) ?: 0
-        val byPassArgs = arguments?.getBundle(KEY_PASS_NAVIGATE)
-        val childId = byPassArgs?.getInt(KEY_NAVIGATE_CHILD_ID) ?: 0
-        val navArgs = byPassArgs?.getBundle(KEY_NAVIGATE_ARGS)
-
-        when {
-            childId != 0 -> {
-                arguments!!.remove(KEY_PASS_NAVIGATE)
-                navController!!.navigate(childId, navArgs)
-            }
-            menuId != 0 -> mOnActivityCreatedListener?.invoke()
-            else -> navController!!.navigateToStart()
-        }
+    fun navigateIfNeeded(): Boolean {
+        if (!arguments!!.containsKey(KEY_NAVIGATE_CHILD_ID)) return false
+        val childId = arguments!!.getInt(KEY_NAVIGATE_CHILD_ID)
+        val navArgs = arguments!!.getBundle(KEY_NAVIGATE_ARGS)
+        navController!!.navigate(childId, navArgs)
+        arguments!!.remove(KEY_NAVIGATE_CHILD_ID)
+        arguments!!.remove(KEY_NAVIGATE_ARGS)
+        return true
     }
 
     private fun setMenu(menuId: Int) {
@@ -133,17 +133,18 @@ class MenuHostFragment : Fragment() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (isVisibleOnScreen()) navigateIfNeeded()
+    }
+
     override fun onHiddenChanged(hidden: Boolean) {
+        if (!hidden) if (navigateIfNeeded()) return
         var visibleChildFragment = childFragmentManager.primaryNavigationFragment
         if (visibleChildFragment == null) {
             visibleChildFragment = childFragmentManager.fragments.find { !it.isHidden && it.userVisibleHint }
         }
-        visibleChildFragment?.also { fragment ->
-            arguments?.getBundle(KEY_PASS_NAVIGATE)?.also { hostArgs ->
-                fragment.addBundle(KEY_PASS_NAVIGATE, hostArgs)
-            }
-            fragment.onHiddenChanged(hidden)
-        }
+        visibleChildFragment?.onHiddenChanged(hidden)
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
@@ -154,7 +155,7 @@ class MenuHostFragment : Fragment() {
     fun addArgs(newArgs: Bundle) {
         var args = arguments
         if (args == null) args = Bundle()
-        args.putBundle(KEY_PASS_NAVIGATE, newArgs)
+        args.putAll(newArgs)
         arguments = args
     }
 
@@ -167,7 +168,7 @@ class MenuHostFragment : Fragment() {
 
         fun findNavController(fragment: Fragment): MenuNavController? {
             if (fragment is MenuHostFragment) return fragment.navController
-            var parent = fragment.parentFragment
+            val parent = fragment.parentFragment
             if (parent != null)
                 return findNavController(parent)
             return null
@@ -177,7 +178,6 @@ class MenuHostFragment : Fragment() {
         private const val KEY_MENU_ID = "android-support-nav:fragment:menuId"
         private const val KEY_NAV_CONTROLLER_STATE = "android-support-nav:fragment:navControllerState"
 
-        const val KEY_PASS_NAVIGATE = "android-support-nav:fragment:args"
         const val KEY_NAVIGATE_ARGS = "android-support-nav:fragment:navigate:args"
         const val KEY_NAVIGATE_CHILD_ID = "android-support-nav:fragment:navigate:childId"
     }
