@@ -89,7 +89,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
             }
             is MenuHostFragment -> {
                 fragment.addArgs(args)
-                fragment.handleArguments()
+                fragment.navigateIfNeeded()
             }
         }
     }

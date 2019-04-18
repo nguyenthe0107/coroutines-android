@@ -29,8 +29,8 @@ class MenuNavController(context: Context) {
         navigatorProvider.addNavigator(NavGraphNavigator(navigatorProvider))
     }
 
-    fun navigate(@IdRes hostId: Int, @IdRes childId: Int, args: Bundle? = null, navOptions: NavOptions? = null) {
-        mNavigator.navigate(mNavGraph.findDestination(hostId), childId, args, navOptions)
+    fun navigate(@IdRes hostId: Int, @IdRes childId: Int) {
+        mNavigator.navigate(mNavGraph.findDestination(hostId), childId, null, null)
     }
 
     fun navigate(@NonNull directions: NavDirections) {
