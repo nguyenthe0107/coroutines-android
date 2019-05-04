@@ -7,6 +7,8 @@ import android.support.R
 import android.support.annotation.IdRes
 import android.support.annotation.NonNull
 import android.support.core.base.BaseFragment
+import android.support.core.extensions.addArgs
+import android.support.core.functional.navigableOptions
 import android.support.design.widget.MenuHostFragment
 import android.support.design.widget.SupportNavHostFragment
 import android.support.v4.app.Fragment
@@ -49,11 +51,8 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         return navigate(destination, args, navOptions)
     }
 
-    fun navigate(hostDestination: Destination, @IdRes childDestination: Int, args: Bundle?, navOptions: NavOptions?): NavDestination? {
-        return navigate(hostDestination, Bundle().apply {
-            putInt(MenuHostFragment.KEY_NAVIGATE_CHILD_ID, childDestination)
-            putBundle(MenuHostFragment.KEY_NAVIGATE_ARGS, args)
-        }, navOptions)
+    fun navigate(hostDestination: Destination, @IdRes childDestination: Int, args: Bundle? = null, navOptions: NavOptions? = null): NavDestination? {
+        return navigate(hostDestination, navigableOptions(childDestination, args), navOptions)
     }
 
     fun navigate(destination: Destination) {
@@ -88,6 +87,10 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
                 fragment.handleNavigateArguments(args)
             }
             is MenuHostFragment -> {
+                fragment.addArgs(args)
+                fragment.navigateIfNeeded()
+            }
+            is SupportNavHostFragment -> {
                 fragment.addArgs(args)
                 fragment.navigateIfNeeded()
             }
@@ -141,7 +144,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
 
         when (fragment) {
             is MenuHostFragment -> if (args != null) fragment.addArgs(args)
-            is NavHostFragment -> if (args != null) throw IllegalArgumentException("Not support by pass arguments for NavHostFragment")
+            is NavHostFragment -> if (args != null) fragment.addArgs(args)
             else -> fragment.arguments = args
         }
     }
@@ -187,7 +190,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
                 : super(navigatorProvider.getNavigator(MenuNavigator::class.java)
         )
 
-        constructor(@NonNull fragmentNavigator: Navigator<out MenuNavigator.Destination>) : super(fragmentNavigator)
+        constructor(@NonNull fragmentNavigator: Navigator<out Destination>) : super(fragmentNavigator)
 
         override fun onInflate(@NonNull context: Context, @NonNull attrs: AttributeSet) {
             super.onInflate(context, attrs)
@@ -196,7 +199,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
             )
             val className = a.getString(R.styleable.FragmentNavigator_android_name)
             if (className != null) {
-                setFragmentClass(NavDestination.parseClassFromName(context, className, Fragment::class.java))
+                setFragmentClass(parseClassFromName(context, className, Fragment::class.java))
             }
             a.recycle()
             val graph = context.obtainStyledAttributes(attrs, R.styleable.NavHostFragment)
@@ -205,7 +208,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         }
 
         @NonNull
-        fun setFragmentClass(@NonNull clazz: Class<out Fragment>): MenuNavigator.Destination {
+        fun setFragmentClass(@NonNull clazz: Class<out Fragment>): Destination {
             mFragmentClass = clazz
             return this
         }
@@ -216,11 +219,11 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
             val f: Fragment
             try {
                 f = when {
-                    clazz!!.isAssignableFrom(NavHostFragment::class.java) -> {
+                    NavHostFragment::class.java.isAssignableFrom(clazz!!) -> {
                         if (mNavGraph == 0) throw RuntimeException("Need a navGraph for host")
                         SupportNavHostFragment.create(mNavGraph)
                     }
-                    clazz.isAssignableFrom(MenuHostFragment::class.java) -> {
+                    MenuHostFragment::class.java.isAssignableFrom(clazz) -> {
                         if (mNavGraph == 0) throw RuntimeException("Need a navGraph for host")
                         MenuHostFragment.create(mNavGraph)
                     }

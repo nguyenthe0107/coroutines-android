@@ -12,7 +12,7 @@ abstract class BaseActivity : AppCompatActivity(), Dispatcher {
 
     override fun onBackPressed() {
         val isFragmentBackPressed = (resultLife as ResultRegistry).backPresses.fold(false) { acc, backable ->
-            acc && backable.onBackPressed()
+            acc || backable.onBackPressed()
         }
         if (!isFragmentBackPressed) super.onBackPressed()
     }

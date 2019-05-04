@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_test"
+    app:startDestination="@+id/postFragment"
+    tools:ignore="UnusedNavigation">
+
+    <fragment
+        android:id="@+id/postFragment"
+        android:name="com.kantek.coroutines.views.fragments.PostFragment" />
+
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.kantek.coroutines.views.fragments.PostDetailFragment" />
+</navigation>

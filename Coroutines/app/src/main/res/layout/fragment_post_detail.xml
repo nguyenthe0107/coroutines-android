@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingTop="?defaultOffset"
-    tools:context=".views.PostDetailActivity">
+    tools:context=".views.fragments.PostDetailFragment">
 
     <TextView
         android:id="@+id/txtTitle"

@@ -3,25 +3,41 @@ package android.support.design.widget
 import android.os.Bundle
 import android.support.annotation.NavigationRes
 import android.support.annotation.NonNull
+import android.support.core.extensions.dispatchHidden
+import android.support.core.extensions.isVisibleOnScreen
+import android.support.core.functional.navigateIfNeeded
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 
-class SupportNavHostFragment : NavHostFragment() {
+internal class SupportNavHostFragment : NavHostFragment() {
 
     override fun onHiddenChanged(hidden: Boolean) {
-        val currentFragment = childFragmentManager.primaryNavigationFragment
-        if (currentFragment != null) {
-            currentFragment.onHiddenChanged(hidden)
-        } else {
-            childFragmentManager.fragments
-                    .find { !it.isHidden && it.userVisibleHint }
-                    ?.onHiddenChanged(hidden)
-        }
+        if (!hidden) navigateIfNeeded()
+        dispatchHidden(hidden)
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         if (isAdded) onHiddenChanged(!isVisibleToUser)
     }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        navigateIfNeeded()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (isVisibleOnScreen()) navigateIfNeeded()
+    }
+
+    fun navigateIfNeeded() =
+        navigateIfNeeded { childId, navArgs ->
+            navController.navigate(childId, navArgs, NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setPopUpTo(navController.graph.startDestination, false)
+                .build())
+        }
 
     companion object {
         private const val KEY_GRAPH_ID = "android-support-nav:fragment:graphId"

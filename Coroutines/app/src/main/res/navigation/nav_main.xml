@@ -3,22 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_main.xml"
-    app:startDestination="@id/postFragment">
+    app:startDestination="@id/hostPostFragment"
+    tools:ignore="UnusedNavigation">
+
     <fragment
-        android:id="@+id/postFragment"
-        android:name="com.kantek.coroutines.views.fragments.PostFragment"
-        android:label="PostFragment"
+        android:id="@+id/hostPostFragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:label="HostPostFragment"
+        app:navGraph="@navigation/nav_test"
         tools:layout="@layout/fragment_post" />
+
     <fragment
         android:id="@+id/albumFragment"
         android:name="com.kantek.coroutines.views.fragments.AlbumFragment"
         android:label="AlbumFragment"
         tools:layout="@layout/fragment_album" />
+
     <fragment
         android:id="@+id/todoFragment"
         android:name="com.kantek.coroutines.views.fragments.TodoFragment"
         android:label="TodoFragment"
         tools:layout="@layout/fragment_todo" />
+
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.kantek.coroutines.views.fragments.ProfileFragment"

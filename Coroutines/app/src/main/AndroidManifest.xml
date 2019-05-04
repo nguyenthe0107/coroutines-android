@@ -21,7 +21,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".views.MainActivity" />
-        <activity android:name=".views.PostDetailActivity" />
         <activity android:name=".views.AlbumDetailActivity" />
         <activity android:name=".views.PhotoActivity" />
     </application>

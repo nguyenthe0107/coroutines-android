@@ -4,8 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.support.annotation.NavigationRes
+import android.support.core.extensions.addArgs
+import android.support.core.extensions.dispatchHidden
 import android.support.core.extensions.isVisibleOnScreen
 import android.support.core.functional.MenuOwner
+import android.support.core.functional.navigateIfNeeded
 import android.support.design.internal.MenuNavController
 import android.support.design.internal.MenuNavigator
 import android.support.design.internal.TYPE_KEEP_STATE
@@ -63,15 +66,8 @@ class MenuHostFragment : Fragment() {
         if (menuId != 0) mOnActivityCreatedListener?.invoke() else navController!!.navigateToStart()
     }
 
-    fun navigateIfNeeded(): Boolean {
-        if (!arguments!!.containsKey(KEY_NAVIGATE_CHILD_ID)) return false
-        val childId = arguments!!.getInt(KEY_NAVIGATE_CHILD_ID)
-        val navArgs = arguments!!.getBundle(KEY_NAVIGATE_ARGS)
-        navController!!.navigate(childId, navArgs)
-        arguments!!.remove(KEY_NAVIGATE_CHILD_ID)
-        arguments!!.remove(KEY_NAVIGATE_ARGS)
-        return true
-    }
+    fun navigateIfNeeded() =
+        navigateIfNeeded { childId, navArgs -> navController!!.navigate(childId, navArgs) }
 
     private fun setMenu(menuId: Int) {
         val rootView = if (view!!.parent != null) view!!.parent as View else view!!
@@ -98,15 +94,8 @@ class MenuHostFragment : Fragment() {
     }
 
     fun setGraph(@NavigationRes graphResId: Int, menuId: Int) {
-        if (navController == null) {
-            var args = arguments
-            if (args == null) args = Bundle()
-            args.putInt(KEY_GRAPH_ID, graphResId)
-            args.putInt(KEY_MENU_ID, menuId)
-            arguments = args
-        } else {
-            navController!!.setGraph(graphResId)
-        }
+        if (navController == null) addArgs(KEY_GRAPH_ID to graphResId, KEY_MENU_ID to menuId)
+        else navController!!.setGraph(graphResId)
     }
 
     fun setupWithView(view: View) {
@@ -139,24 +128,13 @@ class MenuHostFragment : Fragment() {
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
-        if (!hidden) if (navigateIfNeeded()) return
-        var visibleChildFragment = childFragmentManager.primaryNavigationFragment
-        if (visibleChildFragment == null) {
-            visibleChildFragment = childFragmentManager.fragments.find { !it.isHidden && it.userVisibleHint }
-        }
-        visibleChildFragment?.onHiddenChanged(hidden)
+        if (!hidden) navigateIfNeeded()
+        dispatchHidden(hidden)
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         if (isAdded) onHiddenChanged(!isVisibleToUser)
-    }
-
-    fun addArgs(newArgs: Bundle) {
-        var args = arguments
-        if (args == null) args = Bundle()
-        args.putAll(newArgs)
-        arguments = args
     }
 
     companion object {
@@ -169,16 +147,12 @@ class MenuHostFragment : Fragment() {
         fun findNavController(fragment: Fragment): MenuNavController? {
             if (fragment is MenuHostFragment) return fragment.navController
             val parent = fragment.parentFragment
-            if (parent != null)
-                return findNavController(parent)
+            if (parent != null) return findNavController(parent)
             return null
         }
 
         private const val KEY_GRAPH_ID = "android-support-nav:fragment:graphId"
         private const val KEY_MENU_ID = "android-support-nav:fragment:menuId"
         private const val KEY_NAV_CONTROLLER_STATE = "android-support-nav:fragment:navControllerState"
-
-        const val KEY_NAVIGATE_ARGS = "android-support-nav:fragment:navigate:args"
-        const val KEY_NAVIGATE_CHILD_ID = "android-support-nav:fragment:navigate:childId"
     }
 }

@@ -1,7 +1,8 @@
 package android.support.core.extensions
 
-import android.annotation.SuppressLint
+import android.os.Bundle
 import android.support.v4.app.Fragment
+import java.io.Serializable
 
 
 private fun Fragment.isParentVisible(): Boolean {
@@ -13,15 +14,28 @@ private fun Fragment.isParentVisible(): Boolean {
     return true
 }
 
-@SuppressLint("RestrictedApi")
-fun Fragment.isVisibleOnScreen(): Boolean {
-    return !isHidden && isParentVisible() && userVisibleHint
-}
+fun Fragment.isVisibleInParent() = !isHidden && userVisibleHint
+
+fun Fragment.isVisibleOnScreen() = isVisibleInParent() && isParentVisible()
 
 fun Fragment.dispatchHidden(hidden: Boolean) {
-    val fragments = childFragmentManager.fragments
-    for (fragment in fragments) {
-        if (!fragment.isHidden && fragment.userVisibleHint)
-            fragment.onHiddenChanged(hidden)
+    var childVisible = childFragmentManager.primaryNavigationFragment
+    if (childVisible == null) {
+        childVisible = childFragmentManager.fragments.find { it.isVisibleInParent() }
     }
+    childVisible?.onHiddenChanged(hidden)
+}
+
+fun Fragment.addArgs(newArgs: Bundle) {
+    var args = arguments
+    if (args == null) args = Bundle()
+    args.putAll(newArgs)
+    arguments = args
+}
+
+fun Fragment.addArgs(vararg newArgs: Pair<String, Serializable>) {
+    var args = arguments
+    if (args == null) args = Bundle()
+    newArgs.forEach { args.putSerializable(it.first, it.second) }
+    arguments = args
 }

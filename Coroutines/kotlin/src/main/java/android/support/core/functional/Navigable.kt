@@ -1,17 +1,15 @@
 package android.support.core.functional
 
 import android.os.Bundle
-import android.support.design.widget.MenuHostFragment
+import android.support.v4.app.Fragment
+
+private const val KEY_NAVIGATE_ARGS = "android-support-nav:fragment:navigate:args"
+private const val KEY_NAVIGATE_CHILD_ID = "android-support-nav:fragment:navigate:childId"
 
 interface Navigable {
+
     fun handleNavigateArguments(args: Bundle) {
-        if (args.containsKey(MenuHostFragment.KEY_NAVIGATE_CHILD_ID)) {
-            val desId = args.getInt(MenuHostFragment.KEY_NAVIGATE_CHILD_ID)
-            val byArgs = args.getBundle(MenuHostFragment.KEY_NAVIGATE_ARGS)
-            navigateTo(desId, byArgs)
-            args.remove(MenuHostFragment.KEY_NAVIGATE_CHILD_ID)
-            args.remove(MenuHostFragment.KEY_NAVIGATE_ARGS)
-        } else onNewArguments(args)
+        if (navigateIfNeeded(args, this::navigateTo)) else onNewArguments(args)
     }
 
     fun onNewArguments(args: Bundle) {
@@ -20,3 +18,21 @@ interface Navigable {
     fun navigateTo(desId: Int, args: Bundle?) {
     }
 }
+
+private fun navigateIfNeeded(arguments: Bundle, function: (childId: Int, navArgs: Bundle?) -> Unit): Boolean {
+    if (!arguments.containsKey(KEY_NAVIGATE_CHILD_ID)) return false
+    val childId = arguments.getInt(KEY_NAVIGATE_CHILD_ID)
+    val navArgs = arguments.getBundle(KEY_NAVIGATE_ARGS)
+    function(childId, navArgs)
+    arguments.remove(KEY_NAVIGATE_CHILD_ID)
+    arguments.remove(KEY_NAVIGATE_ARGS)
+    return true
+}
+
+fun navigableOptions(childId: Int, navArgs: Bundle?) = Bundle().apply {
+    putInt(KEY_NAVIGATE_CHILD_ID, childId)
+    putBundle(KEY_NAVIGATE_ARGS, navArgs)
+}
+
+fun Fragment.navigateIfNeeded(function: (childId: Int, navArgs: Bundle?) -> Unit) =
+    navigateIfNeeded(arguments!!, function)

@@ -20,9 +20,17 @@ import android.view.View
 abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
     private val TAG: String = this.javaClass.simpleName
 
+    companion object {
+        private const val STATE_INVISIBLE = 1
+        private const val STATE_VISIBLE = 0
+        private const val STATE_NONE = -1
+    }
+
     val resultLife: ResultLifecycle = ResultRegistry()
     val viewLife = ViewLifecycleOwner()
+
     private val mLifeRegistry get() = viewLife.lifecycle
+    private var mVisibleState = STATE_NONE
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -36,7 +44,7 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
         Log.i(TAG, "Destroy")
     }
 
-    override fun onStart() {
+    final override fun onStart() {
         super.onStart()
         if (isVisibleOnScreen()) {
             performStartFragment()
@@ -45,7 +53,7 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
         }
     }
 
-    override fun onStop() {
+    final override fun onStop() {
         super.onStop()
         if (isVisibleOnScreen()) {
             performStopFragment()
@@ -54,30 +62,37 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
         }
     }
 
-    override fun onResume() {
+    final override fun onResume() {
         super.onResume()
         if (isVisibleOnScreen()) {
+            onFragmentResumed()
             mLifeRegistry.resume()
             Log.i(TAG, "Resume")
         }
     }
 
-    override fun onPause() {
+    final override fun onPause() {
         super.onPause()
         if (isVisibleOnScreen()) {
+            onFragmentPaused()
             mLifeRegistry.pause()
             Log.i(TAG, "Pause")
         }
     }
 
-    override fun onHiddenChanged(hidden: Boolean) {
+    final override fun onHiddenChanged(hidden: Boolean) {
+        if (mVisibleState == (if (hidden) STATE_INVISIBLE else STATE_VISIBLE)) return
+
         if (hidden) {
-            mLifeRegistry.pause().stop()
+            onFragmentPaused()
+            mLifeRegistry.pause()
             performStopFragment()
+            mLifeRegistry.stop()
             Log.i(TAG, "Hide")
         } else {
-            mLifeRegistry.start()
             performStartFragment()
+            mLifeRegistry.start()
+            onFragmentResumed()
             mLifeRegistry.resume()
             Log.i(TAG, "Show")
         }
@@ -87,11 +102,13 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
     private fun performStopFragment() {
         (activity as? BaseActivity)?.also { (it.resultLife as ResultRegistry).backPresses.remove(this) }
         onFragmentStopped()
+        mVisibleState = STATE_INVISIBLE
     }
 
     private fun performStartFragment() {
         (activity as? BaseActivity)?.also { (it.resultLife as ResultRegistry).backPresses.add(this) }
         onFragmentStarted()
+        mVisibleState = STATE_VISIBLE
         arguments?.apply { handleNavigateArguments(this) }
     }
 
@@ -99,6 +116,12 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
     }
 
     protected open fun onFragmentStopped() {
+    }
+
+    protected open fun onFragmentResumed() {
+    }
+
+    protected open fun onFragmentPaused() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
