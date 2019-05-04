@@ -10,7 +10,7 @@
         android:id="@+id/hostPostFragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:label="HostPostFragment"
-        app:navGraph="@navigation/nav_test"
+        app:navGraph="@navigation/nav_post"
         tools:layout="@layout/fragment_post" />
 
     <fragment
