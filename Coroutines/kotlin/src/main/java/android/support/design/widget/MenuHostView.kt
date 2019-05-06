@@ -16,6 +16,7 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.navigation.fragment.R
 
+@Deprecated("Unused")
 class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
     private var mFragmentManager: FragmentManager? = null
     val navController = MenuNavController(context)
@@ -36,8 +37,6 @@ class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context
         val a = context.obtainStyledAttributes(attrs, R.styleable.NavHostFragment)
         mGraphId = a.getResourceId(R.styleable.NavHostFragment_navGraph, 0)
         a.recycle()
-        val ta = context.obtainStyledAttributes(attrs, android.support.R.styleable.MenuHostFragment)
-        ta.recycle()
     }
 
     private fun setGraph(@NavigationRes graphResId: Int) {

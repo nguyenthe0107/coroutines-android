@@ -14,8 +14,12 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        app:enterAnim="@anim/slide_in_from_right"
+        app:exitAnim="@anim/slide_out_to_left"
         app:navGraph="@navigation/nav_main"
-        app:navMenu="@id/viewBottomMenu" />
+        app:navMenu="@id/viewBottomMenu"
+        app:popEnterAnim="@anim/slide_in_from_left"
+        app:popExitAnim="@anim/slide_out_to_right" />
 
     <android.support.design.widget.BottomMenuView
         android:id="@+id/viewBottomMenu"
@@ -32,10 +36,10 @@
         android:background="@color/black"
         android:gravity="center_horizontal"
         android:paddingTop="1dp"
-        android:visibility="gone"
-        tools:visibility="visible"
         android:paddingBottom="1dp"
         android:textColor="@color/white"
-        tools:text="Online" />
+        android:visibility="gone"
+        tools:text="Online"
+        tools:visibility="visible" />
 
 </LinearLayout>

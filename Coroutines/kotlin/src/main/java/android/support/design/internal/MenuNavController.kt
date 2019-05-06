@@ -37,9 +37,19 @@ class MenuNavController(context: Context) {
         navigate(directions.actionId, directions.arguments)
     }
 
-    fun navigate(@IdRes destinationId: Int, args: Bundle? = null, navOptions: NavOptions? = null) {
+    fun navigate(@IdRes id: Int, args: Bundle? = null, navOptions: NavOptions? = null) {
         if (mNavGraphId == 0) throw RuntimeException("Not set fragment manager yet!")
-        navigate(mNavGraph.findDestination(destinationId), args, navOptions)
+        var desId = id
+        var navOpts = navOptions
+        val arguments = mNavigator.currentDestination?.getAction(id)?.let {
+            desId = it.destinationId
+            if (navOpts == null) navOpts = it.navOptions
+            if (it.defaultArguments != null) Bundle().also { combine ->
+                combine.putAll(it.defaultArguments)
+                if (args != null) combine.putAll(args)
+            } else args
+        }
+        navigate(mNavGraph.findDestination(desId), arguments, navOpts)
     }
 
     fun navigate(destination: MenuNavigator.Destination, args: Bundle? = null, navOptions: NavOptions? = null) {

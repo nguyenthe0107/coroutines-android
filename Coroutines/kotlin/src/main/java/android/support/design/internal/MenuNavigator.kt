@@ -30,8 +30,8 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
     private var mCurrentDestination: Destination? = null
     private lateinit var mOnNavigateChangedListener: (Int) -> Unit
 
-    val currentTransaction: FragmentTransaction?
-        get() = mCurTransaction
+    val currentDestination get() = mCurrentDestination
+    val currentTransaction get() = mCurTransaction
 
     companion object {
         fun create(containerId: Int, fragmentManager: FragmentManager, navigationType: Int): MenuNavigator {
@@ -47,30 +47,19 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         return false
     }
 
-    override fun navigate(destination: Destination, args: Bundle?, navOptions: NavOptions?, navigatorExtras: Extras?): NavDestination? {
-        return navigate(destination, args, navOptions)
-    }
-
-    fun navigate(hostDestination: Destination, @IdRes childDestination: Int, args: Bundle? = null, navOptions: NavOptions? = null): NavDestination? {
-        return navigate(hostDestination, navigableOptions(childDestination, args), navOptions)
-    }
-
-    fun navigate(destination: Destination) {
-        navigate(destination, null)
-    }
-
-    fun navigate(destination: Destination, navOptions: NavOptions?) {
-        navigate(destination, null, navOptions)
-    }
-
-    fun navigate(destination: Destination, args: Bundle?, navOptions: NavOptions?): NavDestination? {
+    override fun navigate(destination: Destination,
+                          args: Bundle?,
+                          navOptions: NavOptions?,
+                          navigatorExtras: Extras?): NavDestination? {
         if (mCurrentDestination?.id == destination.id) {
             if (args != null) notifyArgumentsChanged(destination, args)
             return destination
         }
         startUpdate()
         if (mCurrentDestination == null) hideFragmentsIfNeeded()
-        addAnimationIfNeeded(navOptions)
+        if (navOptions != null && mCurTransaction != null)
+            addAnimationIfNeeded(navOptions, destination.order - (mCurrentDestination?.order
+                ?: -1) < 0)
         instantiate(destination, args)
         mCurrentDestination?.let { destroy(it) }
         finishUpdate()
@@ -79,9 +68,12 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         return destination
     }
 
+    fun navigate(hostDestination: Destination, @IdRes childDestination: Int, args: Bundle? = null, navOptions: NavOptions? = null): NavDestination? {
+        return navigate(hostDestination, navigableOptions(childDestination, args), navOptions, null)
+    }
+
     private fun notifyArgumentsChanged(destination: Destination, args: Bundle) {
-        val fragment = fragmentManager.findFragmentByTag(makeFragmentName(containerId, destination.id))
-        when (fragment) {
+        when (val fragment = fragmentManager.findFragmentByTag(makeFragmentName(containerId, destination.id))) {
             is BaseFragment -> {
                 fragment.arguments = args
                 fragment.handleNavigateArguments(args)
@@ -97,18 +89,19 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         }
     }
 
-    private fun addAnimationIfNeeded(navOptions: NavOptions?) {
-        var enterAnim = navOptions?.enterAnim ?: -1
-        var exitAnim = navOptions?.exitAnim ?: -1
-        var popEnterAnim = navOptions?.popEnterAnim ?: -1
-        var popExitAnim = navOptions?.popExitAnim ?: -1
-        if (enterAnim != -1 || exitAnim != -1 || popEnterAnim != -1 || popExitAnim != -1) {
-            enterAnim = if (enterAnim != -1) enterAnim else 0
-            exitAnim = if (exitAnim != -1) exitAnim else 0
-            popEnterAnim = if (popEnterAnim != -1) popEnterAnim else 0
-            popExitAnim = if (popExitAnim != -1) popExitAnim else 0
-            mCurTransaction?.setCustomAnimations(enterAnim, exitAnim, popEnterAnim, popExitAnim)
-        }
+    private fun addAnimationIfNeeded(navOptions: NavOptions, shouldRevertAnim: Boolean) {
+        var enterAnim = navOptions.enterAnim
+        var exitAnim = navOptions.exitAnim
+        var popEnterAnim = navOptions.popEnterAnim
+        var popExitAnim = navOptions.popExitAnim
+        enterAnim = if (enterAnim != -1) enterAnim else 0
+        exitAnim = if (exitAnim != -1) exitAnim else 0
+        popEnterAnim = if (popEnterAnim != -1) popEnterAnim else 0
+        popExitAnim = if (popExitAnim != -1) popExitAnim else 0
+        if (shouldRevertAnim)
+            mCurTransaction!!.setCustomAnimations(popEnterAnim, popExitAnim, enterAnim, exitAnim)
+        else
+            mCurTransaction!!.setCustomAnimations(enterAnim, exitAnim, popEnterAnim, popExitAnim)
     }
 
     private fun hideFragmentsIfNeeded() {
@@ -176,6 +169,8 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
 
         private var mFragmentClass: Class<out Fragment>? = null
         private var mNavGraph = 0
+        var order = 0
+            private set
 
         val fragmentClass: Class<out Fragment>?
             @NonNull
@@ -194,9 +189,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
 
         override fun onInflate(@NonNull context: Context, @NonNull attrs: AttributeSet) {
             super.onInflate(context, attrs)
-            val a = context.resources.obtainAttributes(
-                attrs, R.styleable.FragmentNavigator
-            )
+            val a = context.resources.obtainAttributes(attrs, R.styleable.FragmentNavigator)
             val className = a.getString(R.styleable.FragmentNavigator_android_name)
             if (className != null) {
                 setFragmentClass(parseClassFromName(context, className, Fragment::class.java))
@@ -205,6 +198,10 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
             val graph = context.obtainStyledAttributes(attrs, R.styleable.NavHostFragment)
             mNavGraph = graph.getResourceId(R.styleable.NavHostFragment_navGraph, 0)
             graph.recycle()
+
+            val order = context.obtainStyledAttributes(attrs, R.styleable.Destination)
+            this.order = graph.getInteger(R.styleable.Destination_navOrder, 0)
+            order.recycle()
         }
 
         @NonNull

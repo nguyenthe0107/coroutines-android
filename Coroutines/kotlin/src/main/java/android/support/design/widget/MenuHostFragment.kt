@@ -18,12 +18,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.R
 
 class MenuHostFragment : Fragment() {
     var navController: MenuNavController? = null
         private set
     private var mOnActivityCreatedListener: (() -> Unit)? = null
+    private var mNavOptions: NavOptions? = null
 
     @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,6 +85,16 @@ class MenuHostFragment : Fragment() {
         val ta = context.obtainStyledAttributes(attrs, android.support.R.styleable.MenuHostFragment)
         val menuId = ta.getResourceId(android.support.R.styleable.MenuHostFragment_navMenu, 0)
         ta.recycle()
+
+        val action = context.resources.obtainAttributes(attrs, R.styleable.NavAction)
+        mNavOptions = NavOptions.Builder()
+            .setEnterAnim(a.getResourceId(R.styleable.NavAction_enterAnim, android.support.R.anim.default_fade_in))
+            .setExitAnim(a.getResourceId(R.styleable.NavAction_exitAnim, android.support.R.anim.default_fade_out))
+            .setPopEnterAnim(a.getResourceId(R.styleable.NavAction_popEnterAnim, android.support.R.anim.default_fade_in))
+            .setPopExitAnim(a.getResourceId(R.styleable.NavAction_popExitAnim, android.support.R.anim.default_fade_out))
+            .build()
+        action.recycle()
+
         if (graphId != 0) setGraph(graphId, menuId)
     }
 
@@ -99,25 +111,20 @@ class MenuHostFragment : Fragment() {
     }
 
     fun setupWithView(view: View) {
-        val navOptions = MenuNavController.animOptions()
+        if (mNavOptions == null) mNavOptions = MenuNavController.animOptions()
         if (view is MenuOwner) {
-            mOnActivityCreatedListener = {
-                navController!!.navigate(view.getCurrentId())
-            }
-            view.setOnIdSelectedListener {
-                navController!!.navigate(it, navOptions = navOptions)
-            }
+            mOnActivityCreatedListener = { navController!!.navigate(view.getCurrentId()) }
+            view.setOnIdSelectedListener { navController!!.navigate(it, navOptions = mNavOptions) }
             navController!!.setOnNavigateChangeListener { view.selectId(it) }
         } else {
             if (navController!!.getDestinationCount() < 2) throw RuntimeException("Navigation graph need 2 fragment to setup")
-            val toggle = {
+            mOnActivityCreatedListener = {
                 val destination = navController!!.getDestinationActivated(!view.isActivated)
-                navController!!.navigate(destination, navOptions = navOptions)
+                navController!!.navigate(destination, navOptions = mNavOptions)
             }
-            mOnActivityCreatedListener = toggle
             view.setOnClickListener {
                 view.isActivated = !view.isActivated
-                toggle()
+                mOnActivityCreatedListener!!()
             }
         }
     }
