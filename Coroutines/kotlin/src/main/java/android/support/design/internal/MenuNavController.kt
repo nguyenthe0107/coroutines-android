@@ -48,7 +48,7 @@ class MenuNavController(context: Context) {
                 combine.putAll(it.defaultArguments)
                 if (args != null) combine.putAll(args)
             } else args
-        }
+        } ?: args
         navigate(mNavGraph.findDestination(desId), arguments, navOpts)
     }
 
@@ -68,6 +68,8 @@ class MenuNavController(context: Context) {
         return if (!activated) mNavGraph.findDestination(mNavGraph.startDestination)
         else mNavGraph.find { it.id != mNavGraph.startDestination } as MenuNavigator.Destination
     }
+
+    fun getActivated(@IdRes desId: Int) = mNavGraph.startDestination != desId
 
     fun getDestinationCount(): Int {
         return mNavGraph.count()
@@ -91,6 +93,11 @@ class MenuNavController(context: Context) {
             b.putInt(KEY_GRAPH_ID, mNavGraphId)
         }
         return b
+    }
+
+    fun navigateUp(): Boolean {
+        navigateToStart()
+        return true
     }
 
     companion object {

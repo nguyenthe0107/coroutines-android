@@ -169,6 +169,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
 
         private var mFragmentClass: Class<out Fragment>? = null
         private var mNavGraph = 0
+        private var mNavMenu = 0
         var order = 0
             private set
 
@@ -195,6 +196,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
                 setFragmentClass(parseClassFromName(context, className, Fragment::class.java))
             }
             a.recycle()
+
             val graph = context.obtainStyledAttributes(attrs, R.styleable.NavHostFragment)
             mNavGraph = graph.getResourceId(R.styleable.NavHostFragment_navGraph, 0)
             graph.recycle()
@@ -202,6 +204,10 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
             val order = context.obtainStyledAttributes(attrs, R.styleable.Destination)
             this.order = graph.getInteger(R.styleable.Destination_navOrder, 0)
             order.recycle()
+
+            val ta = context.obtainStyledAttributes(attrs, R.styleable.MenuHostFragment)
+            mNavMenu = ta.getResourceId(R.styleable.MenuHostFragment_navMenu, 0)
+            ta.recycle()
         }
 
         @NonNull
@@ -222,7 +228,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
                     }
                     MenuHostFragment::class.java.isAssignableFrom(clazz) -> {
                         if (mNavGraph == 0) throw RuntimeException("Need a navGraph for host")
-                        MenuHostFragment.create(mNavGraph)
+                        MenuHostFragment.create(mNavGraph, mNavMenu)
                     }
                     else -> clazz.newInstance()
                 }

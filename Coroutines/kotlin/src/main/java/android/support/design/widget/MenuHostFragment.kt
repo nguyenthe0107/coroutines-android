@@ -3,6 +3,8 @@ package android.support.design.widget
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.support.R
+import android.support.annotation.IdRes
 import android.support.annotation.NavigationRes
 import android.support.core.extensions.addArgs
 import android.support.core.extensions.dispatchHidden
@@ -19,7 +21,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.navigation.NavOptions
-import androidx.navigation.fragment.R
 
 class MenuHostFragment : Fragment() {
     var navController: MenuNavController? = null
@@ -72,9 +73,7 @@ class MenuHostFragment : Fragment() {
         navigateIfNeeded { childId, navArgs -> navController!!.navigate(childId, navArgs) }
 
     private fun setMenu(menuId: Int) {
-        val rootView = if (view!!.parent != null) view!!.parent as View else view!!
-        val view = rootView.findViewById<View>(menuId)
-        setupWithView(view)
+        setupWithView(view!!.rootView.findViewById<View>(menuId))
     }
 
     override fun onInflate(context: Context?, attrs: AttributeSet?, savedInstanceState: Bundle?) {
@@ -82,16 +81,16 @@ class MenuHostFragment : Fragment() {
         val a = context!!.obtainStyledAttributes(attrs, R.styleable.NavHostFragment)
         val graphId = a.getResourceId(R.styleable.NavHostFragment_navGraph, 0)
         a.recycle()
-        val ta = context.obtainStyledAttributes(attrs, android.support.R.styleable.MenuHostFragment)
-        val menuId = ta.getResourceId(android.support.R.styleable.MenuHostFragment_navMenu, 0)
+        val ta = context.obtainStyledAttributes(attrs, R.styleable.MenuHostFragment)
+        val menuId = ta.getResourceId(R.styleable.MenuHostFragment_navMenu, 0)
         ta.recycle()
 
         val action = context.resources.obtainAttributes(attrs, R.styleable.NavAction)
         mNavOptions = NavOptions.Builder()
-            .setEnterAnim(a.getResourceId(R.styleable.NavAction_enterAnim, android.support.R.anim.default_fade_in))
-            .setExitAnim(a.getResourceId(R.styleable.NavAction_exitAnim, android.support.R.anim.default_fade_out))
-            .setPopEnterAnim(a.getResourceId(R.styleable.NavAction_popEnterAnim, android.support.R.anim.default_fade_in))
-            .setPopExitAnim(a.getResourceId(R.styleable.NavAction_popExitAnim, android.support.R.anim.default_fade_out))
+            .setEnterAnim(a.getResourceId(R.styleable.NavAction_enterAnim, R.anim.default_fade_in))
+            .setExitAnim(a.getResourceId(R.styleable.NavAction_exitAnim, R.anim.default_fade_out))
+            .setPopEnterAnim(a.getResourceId(R.styleable.NavAction_popEnterAnim, R.anim.default_fade_in))
+            .setPopExitAnim(a.getResourceId(R.styleable.NavAction_popExitAnim, R.anim.default_fade_out))
             .build()
         action.recycle()
 
@@ -105,7 +104,7 @@ class MenuHostFragment : Fragment() {
         }
     }
 
-    fun setGraph(@NavigationRes graphResId: Int, menuId: Int) {
+    fun setGraph(@NavigationRes graphResId: Int, @IdRes menuId: Int) {
         if (navController == null) addArgs(KEY_GRAPH_ID to graphResId, KEY_MENU_ID to menuId)
         else navController!!.setGraph(graphResId)
     }
@@ -118,13 +117,17 @@ class MenuHostFragment : Fragment() {
             navController!!.setOnNavigateChangeListener { view.selectId(it) }
         } else {
             if (navController!!.getDestinationCount() < 2) throw RuntimeException("Navigation graph need 2 fragment to setup")
-            mOnActivityCreatedListener = {
-                val destination = navController!!.getDestinationActivated(!view.isActivated)
+            mOnActivityCreatedListener = { navController!!.navigateToStart() }
+            val toggle = {
+                val destination = navController!!.getDestinationActivated(view.isActivated)
                 navController!!.navigate(destination, navOptions = mNavOptions)
             }
             view.setOnClickListener {
                 view.isActivated = !view.isActivated
-                mOnActivityCreatedListener!!()
+                toggle()
+            }
+            navController!!.setOnNavigateChangeListener {
+                view.isActivated = navController!!.getActivated(it)
             }
         }
     }
@@ -145,9 +148,9 @@ class MenuHostFragment : Fragment() {
     }
 
     companion object {
-        fun create(graphResId: Int): Fragment {
+        fun create(graphResId: Int, menuId: Int): Fragment {
             val fragment = MenuHostFragment()
-            fragment.setGraph(graphResId, 0)
+            fragment.setGraph(graphResId, menuId)
             return fragment
         }
 

@@ -2,6 +2,7 @@ package android.support.design.internal
 
 import android.app.Activity
 import android.os.Bundle
+import android.support.R
 import android.support.annotation.IdRes
 import android.support.design.widget.MenuHostFragment
 import android.support.v4.app.ActivityCompat
@@ -10,7 +11,6 @@ import android.view.View
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHost
-import androidx.navigation.R
 import androidx.navigation.fragment.NavHostFragment
 import java.lang.ref.WeakReference
 
