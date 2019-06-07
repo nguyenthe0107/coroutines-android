@@ -18,53 +18,48 @@ import android.util.AttributeSet
 import androidx.navigation.NavDestination
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
-import androidx.navigation.NavigatorProvider
 import androidx.navigation.fragment.NavHostFragment
 
-const val TYPE_ATTACH = 1
-const val TYPE_KEEP_STATE = 2
-
-abstract class MenuNavigator(private val containerId: Int, private val fragmentManager: FragmentManager) :
+abstract class MenuNavigator(val fragmentManager: FragmentManager) :
     Navigator<MenuNavigator.Destination>() {
-    private var mCurTransaction: FragmentTransaction? = null
-    private var mCurrentDestination: Destination? = null
+    companion object {
+        private const val KEY_LAST_DESTINATION = "android:menu:navigator:key:last:destination"
+    }
+
+    lateinit var findDestinationById: (Int) -> Destination
+    private var mCurrentTransaction: FragmentTransaction? = null
+    private var mCurrentId: Int = 0
     private lateinit var mOnNavigateChangedListener: (Int) -> Unit
 
-    val currentDestination get() = mCurrentDestination
-    val currentTransaction get() = mCurTransaction
-
-    companion object {
-        fun create(containerId: Int, fragmentManager: FragmentManager, navigationType: Int): MenuNavigator {
-            return if (navigationType == TYPE_KEEP_STATE)
-                KeepStateNavigator(containerId, fragmentManager)
-            else AttachNavigator(containerId, fragmentManager)
-        }
-    }
+    val currentDestinationId get() = mCurrentId
+    val currentDestination get() = findDestinationById(mCurrentId) as? Destination
 
     override fun createDestination() = Destination(this)
 
-    override fun popBackStack(): Boolean {
-        return false
+    override fun popBackStack() = false
+
+    override fun onSaveState(): Bundle? {
+        val state = Bundle()
+        state.putInt(KEY_LAST_DESTINATION, mCurrentId)
+        return state
+    }
+
+    override fun onRestoreState(savedState: Bundle) {
+        val lastId = savedState.getInt(KEY_LAST_DESTINATION, 0)
+        if (lastId == 0) return
+        transaction { findFragment(lastId)?.apply { hideFragmentsIfNeeded(this) } }
+        mCurrentId = lastId
     }
 
     override fun navigate(destination: Destination,
                           args: Bundle?,
                           navOptions: NavOptions?,
                           navigatorExtras: Extras?): NavDestination? {
-        if (mCurrentDestination?.id == destination.id) {
+        if (mCurrentId == destination.id) {
             if (args != null) notifyArgumentsChanged(destination, args)
             return destination
         }
-        startUpdate()
-        if (mCurrentDestination == null) hideFragmentsIfNeeded()
-        if (navOptions != null && mCurTransaction != null)
-            addAnimationIfNeeded(navOptions, destination.order - (mCurrentDestination?.order
-                ?: -1) < 0)
-        instantiate(destination, args)
-        mCurrentDestination?.let { destroy(it) }
-        finishUpdate()
-        mCurrentDestination = destination
-        mOnNavigateChangedListener(destination.id)
+        navigateTo(destination, args, navOptions, navigatorExtras)
         return destination
     }
 
@@ -72,8 +67,35 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         return navigate(hostDestination, navigableOptions(childDestination, args), navOptions, null)
     }
 
+    private fun navigateTo(destination: Destination,
+                           args: Bundle?,
+                           navOptions: NavOptions?,
+                           navigatorExtras: Extras?) {
+        startUpdate()
+        if (navOptions != null) addAnimationIfNeeded(navOptions, destination)
+        if (mCurrentId != 0) destroy(mCurrentId)
+        addArguments(instantiate(mCurrentTransaction!!, destination, navOptions), args)
+        finishUpdate()
+        notifyNavigateChanged(destination.id)
+    }
+
+    protected fun notifyNavigateChanged(destinationId: Int) {
+        mCurrentId = destinationId
+        mOnNavigateChangedListener(destinationId)
+    }
+
+    private fun addArguments(fragment: Fragment, args: Bundle?) {
+        mCurrentTransaction!!.setPrimaryNavigationFragment(fragment)
+
+        when (fragment) {
+            is MenuHostFragment -> if (args != null) fragment.addArgs(args)
+            is NavHostFragment -> if (args != null) fragment.addArgs(args)
+            else -> fragment.arguments = args
+        }
+    }
+
     private fun notifyArgumentsChanged(destination: Destination, args: Bundle) {
-        when (val fragment = fragmentManager.findFragmentByTag(makeFragmentName(containerId, destination.id))) {
+        when (val fragment = findFragment(destination.id)) {
             is BaseFragment -> {
                 fragment.arguments = args
                 fragment.handleNavigateArguments(args)
@@ -89,7 +111,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         }
     }
 
-    private fun addAnimationIfNeeded(navOptions: NavOptions, shouldRevertAnim: Boolean) {
+    protected fun addAnimationIfNeeded(navOptions: NavOptions, destination: Destination?) {
         var enterAnim = navOptions.enterAnim
         var exitAnim = navOptions.exitAnim
         var popEnterAnim = navOptions.popEnterAnim
@@ -98,65 +120,47 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
         exitAnim = if (exitAnim != -1) exitAnim else 0
         popEnterAnim = if (popEnterAnim != -1) popEnterAnim else 0
         popExitAnim = if (popExitAnim != -1) popExitAnim else 0
-        if (shouldRevertAnim)
-            mCurTransaction!!.setCustomAnimations(popEnterAnim, popExitAnim, enterAnim, exitAnim)
-        else
-            mCurTransaction!!.setCustomAnimations(enterAnim, exitAnim, popEnterAnim, popExitAnim)
+        setCustomAnimations(destination, enterAnim, exitAnim, popEnterAnim, popExitAnim)
     }
 
-    private fun hideFragmentsIfNeeded() {
+    protected open fun setCustomAnimations(destination: Destination?, enterAnim: Int, exitAnim: Int, popEnterAnim: Int, popExitAnim: Int) {
+        mCurrentTransaction!!.setCustomAnimations(enterAnim, exitAnim, popEnterAnim, popExitAnim)
+    }
+
+    private fun hideFragmentsIfNeeded(ignore: Fragment) {
         for (it in fragmentManager.fragments) {
-            if (it.isAdded && !it.isHidden && it.userVisibleHint)
-                hideFragment(it)
+            if (it.isAdded && !it.isHidden && it.userVisibleHint) {
+                if (it != ignore) mCurrentTransaction!!.hide(it)
+            }
         }
     }
 
-    private fun makeFragmentName(viewId: Int, id: Int) = "android:switcher:$viewId:$id"
-
-    private fun createFragmentIfNeeded(destination: Destination): Fragment {
-        var fragment = fragmentManager.findFragmentByTag(makeFragmentName(containerId, destination.id))
-        if (fragment == null)
-            fragment = destination.createFragment()
-        return fragment
+    private fun destroy(destinationId: Int) {
+        val fragment = findFragment(destinationId)!!
+        mCurrentTransaction!!.hide(fragment)
     }
 
-    private fun destroy(from: Destination) {
-        val fragment = fragmentManager.findFragmentByTag(makeFragmentName(containerId, from.id))
-        hideFragment(fragment!!)
+    protected abstract fun findFragment(destinationId: Int): Fragment?
+
+    protected abstract fun instantiate(transaction: FragmentTransaction, destination: Destination, navOptions: NavOptions?): Fragment
+
+    fun transaction(function: FragmentTransaction.() -> Unit) {
+        startUpdate()
+        function(mCurrentTransaction!!)
+        finishUpdate()
     }
-
-    private fun instantiate(destination: Destination, args: Bundle?) {
-        var fragment = fragmentManager.findFragmentByTag(makeFragmentName(containerId, destination.id))
-        if (fragment != null) {
-            showFragment(fragment)
-        } else {
-            fragment = createFragmentIfNeeded(destination)
-            mCurTransaction!!.add(containerId, fragment, makeFragmentName(containerId, destination.id))
-        }
-        mCurTransaction!!.setPrimaryNavigationFragment(fragment)
-
-        when (fragment) {
-            is MenuHostFragment -> if (args != null) fragment.addArgs(args)
-            is NavHostFragment -> if (args != null) fragment.addArgs(args)
-            else -> fragment.arguments = args
-        }
-    }
-
-    abstract fun hideFragment(fragment: Fragment)
-
-    abstract fun showFragment(fragment: Fragment)
 
     private fun finishUpdate() {
-        if (mCurTransaction != null) {
-            mCurTransaction!!.commitNowAllowingStateLoss()
-            mCurTransaction = null
+        if (mCurrentTransaction != null) {
+            mCurrentTransaction!!.commit()
+            mCurrentTransaction = null
         }
     }
 
     @SuppressLint("CommitTransaction")
     private fun startUpdate() {
-        if (mCurTransaction == null) {
-            mCurTransaction = fragmentManager.beginTransaction()
+        if (mCurrentTransaction == null) {
+            mCurrentTransaction = fragmentManager.beginTransaction()
         }
     }
 
@@ -165,13 +169,16 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
     }
 
     @NavDestination.ClassType(Fragment::class)
-    class Destination : NavDestination {
+    open class Destination(@NonNull fragmentNavigator: Navigator<out Destination>) : NavDestination(fragmentNavigator) {
+        companion object {
+            const val NAV_TYPE_ORDER = 1
+            const val NAV_TYPE_STACK = 2
+        }
 
+        private var mNavType: Int = NAV_TYPE_ORDER
         private var mFragmentClass: Class<out Fragment>? = null
         private var mNavGraph = 0
         private var mNavMenu = 0
-        var order = 0
-            private set
 
         val fragmentClass: Class<out Fragment>?
             @NonNull
@@ -181,12 +188,6 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
 
                 return mFragmentClass
             }
-
-        constructor(@NonNull navigatorProvider: NavigatorProvider)
-                : super(navigatorProvider.getNavigator(MenuNavigator::class.java)
-        )
-
-        constructor(@NonNull fragmentNavigator: Navigator<out Destination>) : super(fragmentNavigator)
 
         override fun onInflate(@NonNull context: Context, @NonNull attrs: AttributeSet) {
             super.onInflate(context, attrs)
@@ -201,12 +202,9 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
             mNavGraph = graph.getResourceId(R.styleable.NavHostFragment_navGraph, 0)
             graph.recycle()
 
-            val order = context.obtainStyledAttributes(attrs, R.styleable.Destination)
-            this.order = graph.getInteger(R.styleable.Destination_navOrder, 0)
-            order.recycle()
-
             val ta = context.obtainStyledAttributes(attrs, R.styleable.MenuHostFragment)
             mNavMenu = ta.getResourceId(R.styleable.MenuHostFragment_navMenu, 0)
+            mNavType = ta.getInt(R.styleable.MenuHostFragment_navType, NAV_TYPE_ORDER)
             ta.recycle()
         }
 
@@ -228,7 +226,7 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
                     }
                     MenuHostFragment::class.java.isAssignableFrom(clazz) -> {
                         if (mNavGraph == 0) throw RuntimeException("Need a navGraph for host")
-                        MenuHostFragment.create(mNavGraph, mNavMenu)
+                        MenuHostFragment.create(mNavGraph, mNavMenu, mNavType)
                     }
                     else -> clazz.newInstance()
                 }
@@ -237,31 +235,6 @@ abstract class MenuNavigator(private val containerId: Int, private val fragmentM
             }
 
             return f
-        }
-    }
-
-    @Navigator.Name("fragment")
-    private class AttachNavigator(containerId: Int, fragmentManager: FragmentManager) :
-        MenuNavigator(containerId, fragmentManager) {
-        override fun hideFragment(fragment: Fragment) {
-            currentTransaction!!.detach(fragment)
-        }
-
-        override fun showFragment(fragment: Fragment) {
-            currentTransaction!!.attach(fragment)
-        }
-    }
-
-    @Navigator.Name("fragment")
-    private class KeepStateNavigator(containerId: Int, fragmentManager: FragmentManager) :
-        MenuNavigator(containerId, fragmentManager) {
-
-        override fun hideFragment(fragment: Fragment) {
-            currentTransaction!!.hide(fragment)
-        }
-
-        override fun showFragment(fragment: Fragment) {
-            currentTransaction!!.show(fragment)
         }
     }
 }

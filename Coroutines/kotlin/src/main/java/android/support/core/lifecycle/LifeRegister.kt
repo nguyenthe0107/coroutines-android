@@ -4,7 +4,9 @@ import android.arch.lifecycle.*
 
 
 class LifeRegister(private val registry: LifecycleRegistry) {
-    fun of(owner: LifecycleOwner) = LifeRegister(owner.lifecycle as LifecycleRegistry)
+    companion object {
+        fun of(owner: LifecycleOwner) = LifeRegister(owner.lifecycle as LifecycleRegistry)
+    }
 
     fun onCreate(function: () -> Unit) {
         registry.addObserver(object : LifecycleObserver {

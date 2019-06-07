@@ -25,6 +25,10 @@
 
     <declare-styleable name="MenuHostFragment">
         <attr name="navMenu" format="reference" />
+        <attr name="navType" format="enum">
+            <enum name="order" value="1" />
+            <enum name="stack" value="2" />
+        </attr>
     </declare-styleable>
 
     <declare-styleable name="Destination">

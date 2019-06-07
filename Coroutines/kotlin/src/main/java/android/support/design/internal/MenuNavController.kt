@@ -13,6 +13,7 @@ class MenuNavController(context: Context) {
     private var mNavGraphId: Int = 0
     private var mOnNavigatorChangedListener: ((Int) -> Unit)? = null
     private lateinit var mNavigator: MenuNavigator
+    val navigator get() = mNavigator
 
     val navigatorProvider = object : NavigatorProvider() {
         override fun addNavigator(name: String, navigator: Navigator<out NavDestination>): Navigator<out NavDestination>? {
@@ -41,7 +42,7 @@ class MenuNavController(context: Context) {
         if (mNavGraphId == 0) throw RuntimeException("Not set fragment manager yet!")
         var desId = id
         var navOpts = navOptions
-        val arguments = mNavigator.currentDestination?.getAction(id)?.let {
+        val arguments = mNavGraph.findNode(mNavigator.currentDestinationId)?.getAction(id)?.let {
             desId = it.destinationId
             if (navOpts == null) navOpts = it.navOptions
             if (it.defaultArguments != null) Bundle().also { combine ->
@@ -56,8 +57,10 @@ class MenuNavController(context: Context) {
         mNavigator.navigate(destination, args, navOptions, null)
     }
 
-    fun navigateToStart() {
+    fun navigateToStart(): Boolean {
+        if (mNavigator.currentDestinationId == mNavGraph.startDestination) return false
         mNavigator.navigate(mNavGraph.findDestination(mNavGraph.startDestination), null, null, null)
+        return true
     }
 
     fun setOnNavigateChangeListener(function: (Int) -> Unit) {
@@ -78,26 +81,26 @@ class MenuNavController(context: Context) {
     fun setGraph(graphResId: Int) {
         mNavGraphId = graphResId
         mNavGraph = mInflater.inflate(graphResId)
+        mNavigator.findDestinationById = mNavGraph::findDestination
     }
 
-    fun restoreState(navState: Bundle?) {
-        if (navState == null) return
-        mNavGraphId = navState.getInt(KEY_GRAPH_ID)
+    fun restoreState(state: Bundle?) {
+        if (state == null) return
+        mNavGraphId = state.getInt(KEY_GRAPH_ID, 0)
         if (mNavGraphId != 0) setGraph(mNavGraphId)
+        mNavigator.onRestoreState(state)
     }
 
     fun saveState(): Bundle? {
-        var b: Bundle? = null
-        if (mNavGraphId != 0) {
-            b = Bundle()
-            b.putInt(KEY_GRAPH_ID, mNavGraphId)
-        }
-        return b
+        val state = Bundle()
+        if (mNavGraphId != 0) state.putInt(KEY_GRAPH_ID, mNavGraphId)
+        state.putAll(mNavigator.onSaveState())
+        return state
     }
 
     fun navigateUp(): Boolean {
-        navigateToStart()
-        return true
+        if (mNavigator is MenuStackNavigator) return mNavigator.popBackStack()
+        return false
     }
 
     companion object {

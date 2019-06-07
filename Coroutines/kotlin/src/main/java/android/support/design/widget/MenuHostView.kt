@@ -3,18 +3,18 @@ package android.support.design.widget
 import android.annotation.SuppressLint
 import android.arch.lifecycle.Lifecycle
 import android.content.Context
+import android.support.R
 import android.support.annotation.NavigationRes
 import android.support.core.base.BaseFragment
 import android.support.core.functional.MenuOwner
 import android.support.design.internal.MenuNavController
-import android.support.design.internal.MenuNavigator
-import android.support.design.internal.TYPE_KEEP_STATE
+import android.support.design.internal.MenuOrderNavigator
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
-import androidx.navigation.fragment.R
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Deprecated("Unused")
 class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
@@ -45,17 +45,18 @@ class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context
 
     fun setFragmentManager(fragmentManager: FragmentManager) {
         mFragmentManager = fragmentManager
-        navController.navigatorProvider.addNavigator(MenuNavigator.create(id, fragmentManager, TYPE_KEEP_STATE))
+        navController.navigatorProvider.addNavigator(MenuOrderNavigator(id, fragmentManager))
         setGraph(mGraphId)
     }
 
     fun setupWithView(view: View, fragmentManager: FragmentManager) {
-        mFragmentManager = fragmentManager
         val options = MenuNavController.animOptions()
-        navController.navigatorProvider.addNavigator(MenuNavigator.create(id, fragmentManager, TYPE_KEEP_STATE))
-        setGraph(mGraphId)
+        setFragmentManager(fragmentManager)
         if (view is MenuOwner) {
-            view.setOnIdSelectedListener { navController.navigate(it, navOptions = options) }
+            val shouldAnimation = AtomicBoolean(false)
+            view.setOnIdSelectedListener {
+                navController.navigate(it, navOptions = if (shouldAnimation.get()) options else null)
+            }
             navController.setOnNavigateChangeListener { view.selectId(it) }
             navController.navigate(view.getCurrentId())
         } else {

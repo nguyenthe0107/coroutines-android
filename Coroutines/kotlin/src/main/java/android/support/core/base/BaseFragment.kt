@@ -7,6 +7,7 @@ import android.support.core.extensions.isVisibleOnScreen
 import android.support.core.functional.Backable
 import android.support.core.functional.Dispatcher
 import android.support.core.functional.Navigable
+import android.support.core.lifecycle.LifeRegister
 import android.support.core.lifecycle.ResultLifecycle
 import android.support.core.lifecycle.ResultRegistry
 import android.support.core.lifecycle.ViewLifecycleOwner
@@ -28,6 +29,7 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
 
     val resultLife: ResultLifecycle = ResultRegistry()
     val viewLife = ViewLifecycleOwner()
+    val lifeRegister by lazy { LifeRegister.of(viewLife) }
 
     private val mLifeRegistry get() = viewLife.lifecycle
     private var mVisibleState = STATE_NONE
@@ -100,13 +102,11 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
     }
 
     private fun performStopFragment() {
-        (activity as? BaseActivity)?.also { (it.resultLife as ResultRegistry).backPresses.remove(this) }
         onFragmentStopped()
         mVisibleState = STATE_INVISIBLE
     }
 
     private fun performStartFragment() {
-        (activity as? BaseActivity)?.also { (it.resultLife as ResultRegistry).backPresses.add(this) }
         onFragmentStarted()
         mVisibleState = STATE_VISIBLE
         arguments?.apply { handleNavigateArguments(this) }

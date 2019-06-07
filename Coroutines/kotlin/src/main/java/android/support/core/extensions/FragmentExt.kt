@@ -1,9 +1,11 @@
 package android.support.core.extensions
 
 import android.os.Bundle
+import android.support.design.widget.MenuHostFragment
 import android.support.v4.app.Fragment
 import java.io.Serializable
 
+fun Fragment.findMenuNavController() = MenuHostFragment.findNavController(this)!!
 
 private fun Fragment.isParentVisible(): Boolean {
     var parent = parentFragment
@@ -18,12 +20,14 @@ fun Fragment.isVisibleInParent() = !isHidden && userVisibleHint
 
 fun Fragment.isVisibleOnScreen() = isVisibleInParent() && isParentVisible()
 
-fun Fragment.dispatchHidden(hidden: Boolean) {
+fun Fragment.dispatchHidden(hidden: Boolean) = findChildVisible()?.onHiddenChanged(hidden)
+
+fun Fragment.findChildVisible(): Fragment? {
     var childVisible = childFragmentManager.primaryNavigationFragment
     if (childVisible == null) {
         childVisible = childFragmentManager.fragments.find { it.isVisibleInParent() }
     }
-    childVisible?.onHiddenChanged(hidden)
+    return childVisible
 }
 
 fun Fragment.addArgs(newArgs: Bundle) {

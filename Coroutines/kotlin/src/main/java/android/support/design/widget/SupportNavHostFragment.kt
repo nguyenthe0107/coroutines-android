@@ -5,11 +5,12 @@ import android.support.annotation.NavigationRes
 import android.support.annotation.NonNull
 import android.support.core.extensions.dispatchHidden
 import android.support.core.extensions.isVisibleOnScreen
+import android.support.core.functional.Backable
 import android.support.core.functional.navigateIfNeeded
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 
-internal class SupportNavHostFragment : NavHostFragment() {
+internal class SupportNavHostFragment : NavHostFragment(), Backable {
 
     override fun onHiddenChanged(hidden: Boolean) {
         if (!hidden) navigateIfNeeded()

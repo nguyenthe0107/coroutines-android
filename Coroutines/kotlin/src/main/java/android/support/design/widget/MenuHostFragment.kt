@@ -9,11 +9,13 @@ import android.support.annotation.NavigationRes
 import android.support.core.extensions.addArgs
 import android.support.core.extensions.dispatchHidden
 import android.support.core.extensions.isVisibleOnScreen
+import android.support.core.functional.Backable
 import android.support.core.functional.MenuOwner
 import android.support.core.functional.navigateIfNeeded
 import android.support.design.internal.MenuNavController
 import android.support.design.internal.MenuNavigator
-import android.support.design.internal.TYPE_KEEP_STATE
+import android.support.design.internal.MenuOrderNavigator
+import android.support.design.internal.MenuStackNavigator
 import android.support.v4.app.Fragment
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -22,7 +24,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.navigation.NavOptions
 
-class MenuHostFragment : Fragment() {
+class MenuHostFragment : Fragment(), Backable {
     var navController: MenuNavController? = null
         private set
     private var mOnActivityCreatedListener: (() -> Unit)? = null
@@ -32,7 +34,11 @@ class MenuHostFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         navController = MenuNavController(context!!)
-        navController!!.navigatorProvider.addNavigator(MenuNavigator.create(id, childFragmentManager, TYPE_KEEP_STATE))
+        val navigator = if (arguments?.getInt(KEY_NAVIGATOR_TYPE) == MenuNavigator.Destination.NAV_TYPE_STACK)
+            MenuStackNavigator(id, childFragmentManager)
+        else MenuOrderNavigator(id, childFragmentManager)
+
+        navController!!.navigatorProvider.addNavigator(navigator)
 
         var navState: Bundle? = null
         if (savedInstanceState != null) navState = savedInstanceState.getBundle(KEY_NAV_CONTROLLER_STATE)
@@ -53,18 +59,19 @@ class MenuHostFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         if (view !is ViewGroup) throw IllegalStateException("created host view $view is not a ViewGroup")
         val rootView = if (view.getParent() != null) view.getParent() as View else view
-        rootView.setTag(android.support.R.string.nav_menu_controller_view_tag, navController!!)
+        rootView.setTag(R.string.nav_menu_controller_view_tag, navController!!)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         if (arguments == null) {
-            navController!!.navigateToStart()
+            if (savedInstanceState == null) navController!!.navigateToStart()
             return
         }
 
         val menuId = arguments!!.getInt(KEY_MENU_ID, 0)
         if (menuId != 0) setMenu(menuId)
+        if (savedInstanceState != null) return
         if (navigateIfNeeded()) return
         if (menuId != 0) mOnActivityCreatedListener?.invoke() else navController!!.navigateToStart()
     }
@@ -81,8 +88,10 @@ class MenuHostFragment : Fragment() {
         val a = context!!.obtainStyledAttributes(attrs, R.styleable.NavHostFragment)
         val graphId = a.getResourceId(R.styleable.NavHostFragment_navGraph, 0)
         a.recycle()
+
         val ta = context.obtainStyledAttributes(attrs, R.styleable.MenuHostFragment)
         val menuId = ta.getResourceId(R.styleable.MenuHostFragment_navMenu, 0)
+        val navType = ta.getInt(R.styleable.MenuHostFragment_navType, MenuNavigator.Destination.NAV_TYPE_ORDER)
         ta.recycle()
 
         val action = context.resources.obtainAttributes(attrs, R.styleable.NavAction)
@@ -94,18 +103,19 @@ class MenuHostFragment : Fragment() {
             .build()
         action.recycle()
 
-        if (graphId != 0) setGraph(graphId, menuId)
+        if (graphId != 0) setGraph(graphId, menuId, navType)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        navController!!.saveState()?.apply {
-            outState.putBundle(KEY_NAV_CONTROLLER_STATE, this)
-        }
+        outState.putBundle(KEY_NAV_CONTROLLER_STATE, navController!!.saveState())
     }
 
-    fun setGraph(@NavigationRes graphResId: Int, @IdRes menuId: Int) {
-        if (navController == null) addArgs(KEY_GRAPH_ID to graphResId, KEY_MENU_ID to menuId)
+    fun setGraph(@NavigationRes graphResId: Int, @IdRes menuId: Int, navType: Int) {
+        if (navController == null) addArgs(
+            KEY_GRAPH_ID to graphResId,
+            KEY_MENU_ID to menuId,
+            KEY_NAVIGATOR_TYPE to navType)
         else navController!!.setGraph(graphResId)
     }
 
@@ -148,9 +158,9 @@ class MenuHostFragment : Fragment() {
     }
 
     companion object {
-        fun create(graphResId: Int, menuId: Int): Fragment {
+        fun create(graphResId: Int, menuId: Int, navType: Int): Fragment {
             val fragment = MenuHostFragment()
-            fragment.setGraph(graphResId, menuId)
+            fragment.setGraph(graphResId, menuId, navType)
             return fragment
         }
 
@@ -162,6 +172,7 @@ class MenuHostFragment : Fragment() {
         }
 
         private const val KEY_GRAPH_ID = "android-support-nav:fragment:graphId"
+        private const val KEY_NAVIGATOR_TYPE = "android-support-nav:fragment:navigator:type"
         private const val KEY_MENU_ID = "android-support-nav:fragment:menuId"
         private const val KEY_NAV_CONTROLLER_STATE = "android-support-nav:fragment:navControllerState"
     }
