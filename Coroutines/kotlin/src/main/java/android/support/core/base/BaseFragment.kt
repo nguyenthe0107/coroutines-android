@@ -19,7 +19,7 @@ import android.view.View
  * Custom for lifecycle
  */
 abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
-    private val TAG: String = this.javaClass.simpleName
+    private val TAG: String = "F/${this.javaClass.simpleName}"
 
     companion object {
         private const val STATE_INVISIBLE = 1
@@ -90,13 +90,13 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
             mLifeRegistry.pause()
             performStopFragment()
             mLifeRegistry.stop()
-            Log.i(TAG, "Hide")
+            Log.i(TAG, "Hide-Stop")
         } else {
             performStartFragment()
             mLifeRegistry.start()
             onFragmentResumed()
             mLifeRegistry.resume()
-            Log.i(TAG, "Show")
+            Log.i(TAG, "Show-Start")
         }
         dispatchHidden(hidden)
     }

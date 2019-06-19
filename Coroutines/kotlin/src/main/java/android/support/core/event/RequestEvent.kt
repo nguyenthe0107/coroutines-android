@@ -9,7 +9,7 @@ open class RefreshEvent<T>(
     /**
      * In milliseconds
      */
-    private val timeRate: Long = 0
+    private val timeRate: Long = 200
 ) : MediatorLiveData<T>() {
     private var mOnActivated: (() -> Unit)? = null
     private var mActivated = false
@@ -35,7 +35,8 @@ open class RefreshEvent<T>(
     fun addEvent(event: ForwardEvent<out Any, out Any>, vararg data: LiveData<out Any?>, function: ((Any?) -> Unit)? = null) {
         event.observe(owner) {
             val shouldRefresh = data.fold(false) { acc, item -> acc || item.value == null }
-            if (shouldRefresh) if (function != null) function(it) else onEvent(it)
+            if (!shouldRefresh) return@observe
+            if (function != null) function(it) else onEvent(it)
         }
     }
 
@@ -66,12 +67,19 @@ open class RefreshEvent<T>(
     }
 
     fun call() {
-        if (timeRate > 0) {
-            val current = System.currentTimeMillis()
-            if (current - mLastCalled < timeRate) return
-            mLastCalled = current
-        }
         value = value
+    }
+
+    override fun setValue(value: T?) {
+        if (shouldCall()) super.setValue(value)
+    }
+
+    private fun shouldCall(): Boolean {
+        if (timeRate <= 0) return false
+        val current = System.currentTimeMillis()
+        if (current - mLastCalled < timeRate) return false
+        mLastCalled = current
+        return true
     }
 }
 
@@ -79,7 +87,7 @@ class RequestEvent<T>(owner: LifecycleOwner) : RefreshEvent<T>(owner) {
     private var mStoreValue: T? = null
 
     override fun onEvent(eventValue: Any?) {
-        postValue(mStoreValue)
+        if (mStoreValue != null) postValue(mStoreValue)
     }
 
     override fun setValue(value: T?) {

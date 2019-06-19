@@ -49,7 +49,9 @@ class MenuStackOrderNavigator(containerId: Int,
         current as DestinationWrapper
         target as DestinationWrapper
         if (current.order == ORDER_NOT_SET) {
-            super.setPopAnimations(current, target)
+            if (target.order == ORDER_NOT_SET)
+                super.setPopAnimations(current, target)
+            else setCustomAnimations(current.animPopEnter, current.animPopExit)
             return
         }
         val targetEnter = if (target.animEnter != 0) target.animEnter else current.animEnter
@@ -71,10 +73,10 @@ class MenuStackOrderNavigator(containerId: Int,
     class DestinationWrapper(destinationId: Int,
                              fragmentTag: String) : MenuStackNavigator.DestinationWrapper(destinationId, fragmentTag) {
         var keepInstance: Boolean = false
-        var order = 0
+        var order = ORDER_NOT_SET
 
         fun before(destination: DestinationWrapper) =
-                order - destination.order < 0
+            order - destination.order < 0
     }
 
     @NavDestination.ClassType(Fragment::class)

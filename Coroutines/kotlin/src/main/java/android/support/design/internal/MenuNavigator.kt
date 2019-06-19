@@ -4,11 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.support.R
-import android.support.annotation.IdRes
 import android.support.annotation.NonNull
 import android.support.core.base.BaseFragment
 import android.support.core.extensions.addArgs
-import android.support.core.functional.navigableOptions
 import android.support.design.widget.MenuHostFragment
 import android.support.design.widget.SupportNavHostFragment
 import android.support.v4.app.Fragment
@@ -22,7 +20,7 @@ import androidx.navigation.Navigator
 import androidx.navigation.fragment.NavHostFragment
 
 abstract class MenuNavigator(val fragmentManager: FragmentManager) :
-        Navigator<MenuNavigator.Destination>() {
+    Navigator<MenuNavigator.Destination>() {
     companion object {
         private const val KEY_LAST_DESTINATION = "android:menu:navigator:key:last:destination"
     }
@@ -123,7 +121,7 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
     protected abstract fun setNavigateAnimations(destination: Destination, enterAnim: Int, exitAnim: Int, popEnterAnim: Int, popExitAnim: Int)
 
     protected fun setCustomAnimations(enterAnim: Int, exitAnim: Int) {
-        mCurrentTransaction!!.setCustomAnimations(enterAnim, exitAnim, 0, 0)
+        mCurrentTransaction!!.setCustomAnimations(enterAnim, exitAnim)
     }
 
     private fun hideFragmentsIfNeeded(ignore: Fragment) {
