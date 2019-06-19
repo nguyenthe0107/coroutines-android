@@ -28,11 +28,13 @@
         <attr name="navType" format="enum">
             <enum name="order" value="1" />
             <enum name="stack" value="2" />
+            <enum name="stackOrder" value="3" />
         </attr>
     </declare-styleable>
 
     <declare-styleable name="Destination">
         <attr name="navOrder" format="integer" />
+        <attr name="navKeepInstance" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="CameraView">

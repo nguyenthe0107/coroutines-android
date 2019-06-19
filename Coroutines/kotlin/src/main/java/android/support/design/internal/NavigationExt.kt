@@ -12,6 +12,8 @@ fun NavController.isCurrentAsStart(): Boolean {
     return navDestination.id == graph.startDestination
 }
 
+fun NavGraph.findStartDestination() = findDestination(startDestination)
+
 fun NavGraph.findDestination(id: Int): MenuNavigator.Destination =
         findNode(id) as MenuNavigator.Destination?
                 ?: throw RuntimeException("No fragment destination match id $id ")

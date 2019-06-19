@@ -7,10 +7,18 @@
     tools:ignore="UnusedNavigation">
 
     <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.kantek.coroutines.views.fragments.PostDetailFragment" />
+
+    <fragment
+        android:id="@+id/commentFragment"
+        android:name="com.kantek.coroutines.views.fragments.CommentFragment" />
+
+    <fragment
         android:id="@+id/hostPostFragment"
-        android:name="android.support.design.widget.MenuHostFragment"
+        android:name="com.kantek.coroutines.views.fragments.PostFragment"
         android:label="HostPostFragment"
-        app:navGraph="@navigation/nav_post"
+        app:navKeepInstance="true"
         app:navOrder="1"
         tools:layout="@layout/fragment_post" />
 
@@ -18,6 +26,7 @@
         android:id="@+id/albumFragment"
         android:name="com.kantek.coroutines.views.fragments.AlbumFragment"
         android:label="AlbumFragment"
+        app:navKeepInstance="true"
         app:navOrder="2"
         tools:layout="@layout/fragment_album" />
 
@@ -25,6 +34,7 @@
         android:id="@+id/todoFragment"
         android:name="com.kantek.coroutines.views.fragments.TodoFragment"
         android:label="TodoFragment"
+        app:navKeepInstance="true"
         app:navOrder="3"
         tools:layout="@layout/fragment_todo" />
 
@@ -32,6 +42,7 @@
         android:id="@+id/profileFragment"
         android:name="com.kantek.coroutines.views.fragments.ProfileFragment"
         android:label="ProfileFragment"
+        app:navKeepInstance="true"
         app:navOrder="4"
         tools:layout="@layout/fragment_profile" />
 </navigation>

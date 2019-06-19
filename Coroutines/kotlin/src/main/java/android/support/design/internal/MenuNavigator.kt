@@ -16,23 +16,24 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
 import android.util.AttributeSet
 import androidx.navigation.NavDestination
+import androidx.navigation.NavGraph
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
 import androidx.navigation.fragment.NavHostFragment
 
 abstract class MenuNavigator(val fragmentManager: FragmentManager) :
-    Navigator<MenuNavigator.Destination>() {
+        Navigator<MenuNavigator.Destination>() {
     companion object {
         private const val KEY_LAST_DESTINATION = "android:menu:navigator:key:last:destination"
     }
 
-    lateinit var findDestinationById: (Int) -> Destination
+    lateinit var navGraph: NavGraph
     private var mCurrentTransaction: FragmentTransaction? = null
     private var mCurrentId: Int = 0
     private lateinit var mOnNavigateChangedListener: (Int) -> Unit
 
     val currentDestinationId get() = mCurrentId
-    val currentDestination get() = findDestinationById(mCurrentId) as? Destination
+    val currentDestination get() = navGraph.findNode(mCurrentId) as? Destination
 
     override fun createDestination() = Destination(this)
 
@@ -63,16 +64,12 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
         return destination
     }
 
-    fun navigate(hostDestination: Destination, @IdRes childDestination: Int, args: Bundle? = null, navOptions: NavOptions? = null): NavDestination? {
-        return navigate(hostDestination, navigableOptions(childDestination, args), navOptions, null)
-    }
-
     private fun navigateTo(destination: Destination,
                            args: Bundle?,
                            navOptions: NavOptions?,
                            navigatorExtras: Extras?) {
         startUpdate()
-        if (navOptions != null) addAnimationIfNeeded(navOptions, destination)
+        if (navOptions != null) setNavigateAnimations(navOptions, destination)
         if (mCurrentId != 0) destroy(mCurrentId)
         addArguments(instantiate(mCurrentTransaction!!, destination, navOptions), args)
         finishUpdate()
@@ -111,7 +108,7 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
         }
     }
 
-    protected fun addAnimationIfNeeded(navOptions: NavOptions, destination: Destination?) {
+    private fun setNavigateAnimations(navOptions: NavOptions, destination: Destination) {
         var enterAnim = navOptions.enterAnim
         var exitAnim = navOptions.exitAnim
         var popEnterAnim = navOptions.popEnterAnim
@@ -120,11 +117,13 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
         exitAnim = if (exitAnim != -1) exitAnim else 0
         popEnterAnim = if (popEnterAnim != -1) popEnterAnim else 0
         popExitAnim = if (popExitAnim != -1) popExitAnim else 0
-        setCustomAnimations(destination, enterAnim, exitAnim, popEnterAnim, popExitAnim)
+        setNavigateAnimations(destination, enterAnim, exitAnim, popEnterAnim, popExitAnim)
     }
 
-    protected open fun setCustomAnimations(destination: Destination?, enterAnim: Int, exitAnim: Int, popEnterAnim: Int, popExitAnim: Int) {
-        mCurrentTransaction!!.setCustomAnimations(enterAnim, exitAnim, popEnterAnim, popExitAnim)
+    protected abstract fun setNavigateAnimations(destination: Destination, enterAnim: Int, exitAnim: Int, popEnterAnim: Int, popExitAnim: Int)
+
+    protected fun setCustomAnimations(enterAnim: Int, exitAnim: Int) {
+        mCurrentTransaction!!.setCustomAnimations(enterAnim, exitAnim, 0, 0)
     }
 
     private fun hideFragmentsIfNeeded(ignore: Fragment) {
@@ -140,9 +139,36 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
         mCurrentTransaction!!.hide(fragment)
     }
 
+    protected open fun instantiate(transaction: FragmentTransaction, destination: Destination, navOptions: NavOptions?): Fragment {
+        val (fragment, isCreated) = createFragmentIfNeeded(navOptions, destination)
+        val tag: String
+        if (isCreated) {
+            tag = generateTag(fragment, destination)
+            transaction.add(getContainerId(), fragment, tag)
+        } else {
+            tag = fragment.tag!!
+            transaction.show(fragment)
+        }
+        onInstantiated(destination, navOptions, fragment, tag)
+        return fragment
+    }
+
+    protected fun findFragment(tag: String) = fragmentManager.findFragmentByTag(tag)
+
+    protected open fun onInstantiated(destination: Destination, navOptions: NavOptions?, fragment: Fragment, tag: String) {
+    }
+
+    fun generateTag(id: Int): String {
+        return "android:switcher:${getContainerId()}:$id"
+    }
+
     protected abstract fun findFragment(destinationId: Int): Fragment?
 
-    protected abstract fun instantiate(transaction: FragmentTransaction, destination: Destination, navOptions: NavOptions?): Fragment
+    abstract fun getContainerId(): Int
+
+    protected abstract fun generateTag(fragment: Fragment, destination: Destination): String
+
+    protected abstract fun createFragmentIfNeeded(navOptions: NavOptions?, destination: Destination): Pair<Fragment, Boolean>
 
     fun transaction(function: FragmentTransaction.() -> Unit) {
         startUpdate()
@@ -173,6 +199,7 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
         companion object {
             const val NAV_TYPE_ORDER = 1
             const val NAV_TYPE_STACK = 2
+            const val NAV_TYPE_STACK_ORDER = 3
         }
 
         private var mNavType: Int = NAV_TYPE_ORDER

@@ -12,10 +12,7 @@ import android.support.core.extensions.isVisibleOnScreen
 import android.support.core.functional.Backable
 import android.support.core.functional.MenuOwner
 import android.support.core.functional.navigateIfNeeded
-import android.support.design.internal.MenuNavController
-import android.support.design.internal.MenuNavigator
-import android.support.design.internal.MenuOrderNavigator
-import android.support.design.internal.MenuStackNavigator
+import android.support.design.internal.*
 import android.support.v4.app.Fragment
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -34,9 +31,11 @@ class MenuHostFragment : Fragment(), Backable {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         navController = MenuNavController(context!!)
-        val navigator = if (arguments?.getInt(KEY_NAVIGATOR_TYPE) == MenuNavigator.Destination.NAV_TYPE_STACK)
-            MenuStackNavigator(id, childFragmentManager)
-        else MenuOrderNavigator(id, childFragmentManager)
+        val navigator = when (arguments?.getInt(KEY_NAVIGATOR_TYPE)) {
+            MenuNavigator.Destination.NAV_TYPE_STACK -> MenuStackNavigator(id, childFragmentManager)
+            MenuNavigator.Destination.NAV_TYPE_STACK_ORDER -> MenuStackOrderNavigator(id, childFragmentManager)
+            else -> MenuOrderNavigator(id, childFragmentManager)
+        }
 
         navController!!.navigatorProvider.addNavigator(navigator)
 
@@ -121,6 +120,7 @@ class MenuHostFragment : Fragment(), Backable {
 
     fun setupWithView(view: View) {
         if (mNavOptions == null) mNavOptions = MenuNavController.animOptions()
+        mNavOptions = wrapNavOptionsIfNeeded(mNavOptions!!)
         if (view is MenuOwner) {
             mOnActivityCreatedListener = { navController!!.navigate(view.getCurrentId()) }
             view.setOnIdSelectedListener { navController!!.navigate(it, navOptions = mNavOptions) }
@@ -140,6 +140,18 @@ class MenuHostFragment : Fragment(), Backable {
                 view.isActivated = navController!!.getActivated(it)
             }
         }
+    }
+
+    private fun wrapNavOptionsIfNeeded(navOptions: NavOptions): NavOptions {
+        if (navController!!.navigator !is MenuStackOrderNavigator) return navOptions
+        return NavOptions.Builder()
+            .setEnterAnim(navOptions.enterAnim)
+            .setExitAnim(navOptions.exitAnim)
+            .setPopEnterAnim(navOptions.popEnterAnim)
+            .setPopExitAnim(navOptions.popExitAnim)
+            .setLaunchSingleTop(true)
+            .setPopUpTo(navController!!.startDestination, true)
+            .build()
     }
 
     override fun onStart() {

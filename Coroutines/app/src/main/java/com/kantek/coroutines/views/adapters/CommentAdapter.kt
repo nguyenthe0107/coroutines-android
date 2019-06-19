@@ -9,8 +9,14 @@ import com.kantek.coroutines.models.Comment
 import kotlinx.android.synthetic.main.item_view_comment.view.*
 
 class CommentAdapter(view: RecyclerView) : RecyclerAdapter<Comment>(view) {
-    override fun onCreateViewHolder(p0: ViewGroup, p1: Int)=object:
-        RecyclerHolder<Comment>(p0, R.layout.item_view_comment){
+    var onItemClickListener: ((Comment) -> Unit)? = null
+
+    override fun onCreateViewHolder(p0: ViewGroup, p1: Int) = object :
+        RecyclerHolder<Comment>(p0, R.layout.item_view_comment) {
+        init {
+            itemView.setOnClickListener { onItemClickListener?.invoke(item!!) }
+        }
+
         override fun bind(item: Comment) {
             super.bind(item)
             itemView.apply {

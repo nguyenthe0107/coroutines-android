@@ -18,6 +18,7 @@
         app:exitAnim="@anim/slide_out_to_left"
         app:navGraph="@navigation/nav_main"
         app:navMenu="@id/viewBottomMenu"
+        app:navType="stackOrder"
         app:popEnterAnim="@anim/slide_in_from_left"
         app:popExitAnim="@anim/slide_out_to_right" />
 

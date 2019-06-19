@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.support.annotation.IdRes
 import android.support.annotation.NonNull
+import android.support.core.functional.navigableOptions
 import androidx.navigation.*
 
 @SuppressLint("RestrictedApi")
@@ -25,13 +26,14 @@ class MenuNavController(context: Context) {
         }
     }
     private val mInflater: NavInflater = NavInflater(context, navigatorProvider)
+    val startDestination get() = mNavGraph.startDestination
 
     init {
         navigatorProvider.addNavigator(NavGraphNavigator(navigatorProvider))
     }
 
     fun navigate(@IdRes hostId: Int, @IdRes childId: Int, args: Bundle? = null, navOptions: NavOptions? = null) {
-        mNavigator.navigate(mNavGraph.findDestination(hostId), childId, args, navOptions)
+        mNavigator.navigate(mNavGraph.findDestination(hostId), navigableOptions(childId, args), navOptions, null)
     }
 
     fun navigate(@NonNull directions: NavDirections) {
@@ -81,7 +83,7 @@ class MenuNavController(context: Context) {
     fun setGraph(graphResId: Int) {
         mNavGraphId = graphResId
         mNavGraph = mInflater.inflate(graphResId)
-        mNavigator.findDestinationById = mNavGraph::findDestination
+        mNavigator.navGraph = mNavGraph
     }
 
     fun restoreState(state: Bundle?) {
@@ -105,11 +107,11 @@ class MenuNavController(context: Context) {
 
     companion object {
         fun animOptions() = NavOptions.Builder()
-            .setEnterAnim(android.support.R.anim.default_fade_in)
-            .setExitAnim(android.support.R.anim.default_fade_out)
-            .setPopEnterAnim(android.support.R.anim.default_fade_in)
-            .setPopExitAnim(android.support.R.anim.default_fade_out)
-            .build()
+                .setEnterAnim(android.support.R.anim.default_fade_in)
+                .setExitAnim(android.support.R.anim.default_fade_out)
+                .setPopEnterAnim(android.support.R.anim.default_fade_in)
+                .setPopExitAnim(android.support.R.anim.default_fade_out)
+                .build()
 
         private const val KEY_GRAPH_ID = "android-support-nav:controller:graphId"
     }

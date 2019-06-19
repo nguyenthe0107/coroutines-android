@@ -10,8 +10,8 @@ import java.io.Serializable
 import java.util.*
 
 @Navigator.Name("fragment")
-class MenuStackNavigator(private val containerId: Int,
-                         fragmentManager: FragmentManager) : MenuNavigator(fragmentManager) {
+open class MenuStackNavigator(private val containerId: Int,
+                              fragmentManager: FragmentManager) : MenuNavigator(fragmentManager) {
     companion object {
         private const val KEY_STACK = "android:menu:stack"
     }
@@ -30,49 +30,51 @@ class MenuStackNavigator(private val containerId: Int,
         super.onRestoreState(savedState)
     }
 
+    override fun getContainerId() = containerId
+
     override fun findFragment(destinationId: Int): Fragment? {
         val tag = mStack.findLast { it.destinationId == destinationId }?.fragmentTag ?: return null
         return findFragment(tag)
     }
 
-    private fun findFragment(fragmentTag: String): Fragment? {
-        return fragmentManager.findFragmentByTag(fragmentTag)
+    override fun instantiate(transaction: FragmentTransaction, destination: MenuNavigator.Destination, navOptions: NavOptions?): Fragment {
+        if (navOptions != null && navOptions.popUpTo != -1) mStack.popUntil(navOptions.popUpTo, navOptions.isPopUpToInclusive) {
+            if (shouldReuse(this)) return@popUntil
+            if (destinationId != destination.id || !navOptions.shouldLaunchSingleTop())
+                transaction.remove(it)
+        }
+        return super.instantiate(transaction, destination, navOptions)
     }
 
-    override fun instantiate(transaction: FragmentTransaction, destination: Destination, navOptions: NavOptions?): Fragment {
-        val fragment: Fragment
-        if (navOptions == null) {
-            fragment = destination.createFragment()
-            val tag = generateTag(fragment)
-            transaction.add(containerId, fragment, tag)
-            mStack.push(DestinationWrapper(destination.id, tag))
-        } else {
-            fragment = if (navOptions.shouldLaunchSingleTop()) findFragment(destination.id)
-                ?: destination.createFragment()
-            else destination.createFragment()
+    override fun onInstantiated(destination: Destination, navOptions: NavOptions?, fragment: Fragment, tag: String) {
+        mStack.push(createDestinationWrapper(destination.id, tag).setOptions(navOptions).apply { onDestinationPushed(destination, this) })
+    }
 
-            if (navOptions.popUpTo != -1) {
-                mStack.popUntil(navOptions.popUpTo, navOptions.isPopUpToInclusive) {
-                    if (destinationId != destination.id
-                        || !navOptions.shouldLaunchSingleTop()
-                    ) transaction.remove(it)
-                }
-            }
-            var tag = generateTag(fragment)
-            if (!fragment.isAdded) transaction.add(containerId, fragment, tag)
-            else {
-                tag = fragment.tag!!
-                transaction.show(fragment)
-            }
-            mStack.push(DestinationWrapper(destination.id, tag).setOptions(navOptions))
+    override fun createFragmentIfNeeded(navOptions: NavOptions?, destination: Destination): Pair<Fragment, Boolean> {
+        val isLaunchSingleTop = navOptions != null && navOptions.shouldLaunchSingleTop()
+        if (shouldReuse(destination) || isLaunchSingleTop) {
+            val fragment = findFragment(destination.id)
+            if (fragment != null) return fragment to false
         }
-        return fragment
+        return destination.createFragment() to true
+    }
+
+    protected open fun createDestinationWrapper(id: Int, tag: String) = DestinationWrapper(id, tag)
+
+    protected open fun onDestinationPushed(destination: Destination, wrapper: DestinationWrapper) {}
+
+    open fun shouldReuse(destination: Destination) = false
+
+    open fun shouldReuse(destination: DestinationWrapper) = false
+
+    override fun generateTag(fragment: Fragment, destination: Destination): String {
+        return "android:switcher:${fragment.javaClass.simpleName}:${System.currentTimeMillis()}"
     }
 
     private fun Stack<DestinationWrapper>.popUntil(
-        popUpTo: Int,
-        popUpToInclusive: Boolean,
-        function: DestinationWrapper.(Fragment) -> Unit) {
+            popUpTo: Int,
+            popUpToInclusive: Boolean,
+            function: DestinationWrapper.(Fragment) -> Unit) {
         val accept = {
             val top = pop()
             function(top, findFragment(top.fragmentTag)!!)
@@ -88,45 +90,76 @@ class MenuStackNavigator(private val containerId: Int,
         }
     }
 
-    private fun generateTag(fragment: Fragment) =
-        "android:switcher:${fragment.javaClass.simpleName}:${System.currentTimeMillis()}"
-
     override fun popBackStack(): Boolean {
         if (mStack.isEmpty()) return false
         val current = mStack.pop() ?: return false
-        if (mStack.isEmpty()) return false
+
+        if (mStack.isEmpty()) {
+            val startDestination = navGraph.findStartDestination()
+            if (current.destinationId != startDestination.id) {
+                navigate(startDestination, null, current.getNavOptions(), null)
+                return true
+            }
+            return false
+        }
         val target = mStack.lastElement()
         transaction {
-            addAnimationIfNeeded(current.makePopNavOptions(), null)
-            remove(findFragment(current.fragmentTag)!!)
+            setPopAnimations(current, target)
+            val currentFragment = findFragment(current.fragmentTag)!!
+            if (shouldReuse(current)) hide(currentFragment)
+            else remove(currentFragment)
             show(findFragment(target.fragmentTag)!!)
         }
         notifyNavigateChanged(target.destinationId)
         return true
     }
 
-    private class DestinationWrapper(val destinationId: Int,
-                                     val fragmentTag: String) : Serializable {
-        var mAnimEnter: Int = 0
-        var mAnimExit: Int = 0
-        var mAnimPopEnter: Int = 0
-        var mAnimPopExit: Int = 0
+    override fun setNavigateAnimations(destination: Destination, enterAnim: Int, exitAnim: Int, popEnterAnim: Int, popExitAnim: Int) {
+        if (!mStack.isEmpty()) {
+            var lastExit = mStack.lastElement().animExit
+            if (lastExit == 0) lastExit = exitAnim
+            setCustomAnimations(enterAnim, lastExit)
+        } else setCustomAnimations(enterAnim, exitAnim)
+    }
+
+    protected open fun setPopAnimations(current: DestinationWrapper, target: DestinationWrapper) {
+        val targetPopEnter = if (target.animPopEnter != 0) target.animPopEnter else current.animPopEnter
+        setCustomAnimations(targetPopEnter, current.animPopExit)
+    }
+
+    open class DestinationWrapper(val destinationId: Int,
+                                  val fragmentTag: String) : Serializable {
+        var animEnter: Int = 0
+            private set
+        var animExit: Int = 0
+            private set
+        var animPopEnter: Int = 0
+            private set
+        var animPopExit: Int = 0
+            private set
 
         fun setOptions(value: NavOptions?): DestinationWrapper {
-            mAnimEnter = value?.enterAnim ?: 0
-            mAnimExit = value?.exitAnim ?: 0
-            mAnimPopEnter = value?.popEnterAnim ?: 0
-            mAnimPopExit = value?.popExitAnim ?: 0
+            if (value == null) {
+                animEnter = 0
+                animExit = 0
+                animPopEnter = 0
+                animPopExit = 0
+                return this
+            }
+            animEnter = if (value.enterAnim == -1) 0 else value.enterAnim
+            animExit = if (value.exitAnim == -1) 0 else value.exitAnim
+            animPopEnter = if (value.popEnterAnim == -1) 0 else value.popEnterAnim
+            animPopExit = if (value.popEnterAnim == -1) 0 else value.popExitAnim
             return this
         }
 
-        fun makePopNavOptions(): NavOptions {
+        fun getNavOptions(): NavOptions {
             return NavOptions.Builder()
-                .setEnterAnim(mAnimPopEnter)
-                .setExitAnim(mAnimPopExit)
-                .setPopEnterAnim(mAnimEnter)
-                .setPopExitAnim(mAnimExit)
-                .build()
+                    .setEnterAnim(animEnter)
+                    .setExitAnim(animExit)
+                    .setPopEnterAnim(animPopEnter)
+                    .setPopExitAnim(animPopExit)
+                    .build()
         }
     }
 }

@@ -2,12 +2,10 @@ package com.kantek.coroutines.views.fragments
 
 import android.os.Bundle
 import android.support.core.annotations.LayoutId
-import android.support.core.event.RequestEvent
 import android.support.core.extensions.get
 import android.support.core.extensions.observe
 import android.support.design.widget.MenuHostFragment
 import android.view.View
-import androidx.navigation.fragment.NavHostFragment
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppFragment
 import com.kantek.coroutines.viewmodel.PostViewModel
@@ -23,12 +21,16 @@ class PostDetailFragment : AppFragment<PostViewModel>() {
         mAdapter = CommentAdapter(recvContent)
 
         viewModel.post.observe(this) {
-            txtTitle.text = it!!.title
-            txtBody.text = it.body
+            txtTitle.text = it?.title
+            txtBody.text = it?.body
         }
 
         viewModel.comments.observe(this) {
             mAdapter.items = it
+        }
+        mAdapter.onItemClickListener = {
+            MenuHostFragment.findNavController(this)!!
+                .navigate(R.id.commentFragment)
         }
     }
 
@@ -37,6 +39,6 @@ class PostDetailFragment : AppFragment<PostViewModel>() {
     }
 
     override fun onBackPressed(): Boolean {
-        return NavHostFragment.findNavController(this).navigateUp()
+        return MenuHostFragment.findNavController(this)!!.navigateUp()
     }
 }

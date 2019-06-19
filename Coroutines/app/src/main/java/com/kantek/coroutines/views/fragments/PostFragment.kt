@@ -5,8 +5,8 @@ import android.support.core.annotations.LayoutId
 import android.support.core.extensions.asArgument
 import android.support.core.extensions.observe
 import android.support.core.extensions.toBundle
+import android.support.design.widget.MenuHostFragment
 import android.view.View
-import androidx.navigation.fragment.NavHostFragment
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppFragment
 import com.kantek.coroutines.viewmodel.MainViewModel
@@ -33,7 +33,7 @@ class PostFragment : AppFragment<MainViewModel>() {
             viewRefresh.isRefreshing = false
         }
         mAdapter.onItemClickListener = {
-            NavHostFragment.findNavController(this).navigate(R.id.postDetailFragment,
+            MenuHostFragment.findNavController(this)!!.navigate(R.id.postDetailFragment,
                 it.asArgument().toBundle())
         }
     }
