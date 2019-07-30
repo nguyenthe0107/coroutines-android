@@ -1,4 +1,4 @@
-package android.support.core.helpers
+package com.kantek.coroutines.app
 
 import android.app.Activity
 import android.content.ContentValues
@@ -7,7 +7,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import android.support.annotation.RequiresApi
+import androidx.annotation.RequiresApi
 import android.support.core.base.BaseActivity
 
 
@@ -35,12 +35,8 @@ class AppSettings(val context: BaseActivity) {
         galleryIntent.type = format
         galleryIntent.action = Intent.ACTION_GET_CONTENT
 
-        context.resultLife.onActivityResult { requestCode, resultCode, intent ->
-            if (requestCode != OPEN_GALLERY
-                || resultCode != Activity.RESULT_OK
-                || intent == null
-            ) return@onActivityResult
-
+        context.resultLife.onActivityResult(OPEN_GALLERY) { resultCode, intent ->
+            if (resultCode != Activity.RESULT_OK || intent == null) return@onActivityResult
             val data = intent.data ?: return@onActivityResult
             function.invoke(data)
         }
@@ -55,11 +51,8 @@ class AppSettings(val context: BaseActivity) {
         galleryIntent.action = Intent.ACTION_GET_CONTENT
         galleryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
 
-        context.resultLife.onActivityResult { requestCode, resultCode, intent ->
-            if (requestCode != SELECT_MULTIPLE_IMAGE
-                || resultCode != Activity.RESULT_OK
-                || intent == null
-            ) return@onActivityResult
+        context.resultLife.onActivityResult(SELECT_MULTIPLE_IMAGE) { resultCode, intent ->
+            if (resultCode != Activity.RESULT_OK || intent == null) return@onActivityResult
             if (intent.clipData != null) {
                 val count = intent.clipData!!.itemCount
                 val uris = (0 until count).asSequence()
@@ -75,11 +68,8 @@ class AppSettings(val context: BaseActivity) {
 
     fun openCameraForBitmap(function: (Bitmap) -> Unit) {
         val cameraIntent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
-        context.resultLife.onActivityResult { requestCode, resultCode, intent ->
-            if (requestCode != CAMERA_REQUEST
-                || resultCode != Activity.RESULT_OK
-                || intent == null
-            ) return@onActivityResult
+        context.resultLife.onActivityResult(CAMERA_REQUEST) { resultCode, intent ->
+            if (resultCode != Activity.RESULT_OK || intent == null) return@onActivityResult
             val bundle = intent.extras
             bundle?.apply {
                 val bitmap = get("data") as Bitmap
@@ -94,10 +84,8 @@ class AppSettings(val context: BaseActivity) {
             put(MediaStore.Images.Media.TITLE, "New Picture")
             put(MediaStore.Images.Media.DESCRIPTION, "From your Camera")
         })
-        context.resultLife.onActivityResult { requestCode, resultCode, intent ->
-            if (requestCode != CAMERA_REQUEST
-                || resultCode != Activity.RESULT_OK
-            ) return@onActivityResult
+        context.resultLife.onActivityResult(CAMERA_REQUEST) { resultCode, intent ->
+            if (resultCode != Activity.RESULT_OK) return@onActivityResult
             try {
 //                val thumbnail = MediaStore.Images.Media.getBitmap(context.contentResolver, imageURI)
 //                val url = getRealPathFromURI(imageURI!!)
@@ -111,7 +99,7 @@ class AppSettings(val context: BaseActivity) {
         }, CAMERA_REQUEST)
     }
 
-//    fun openPlaceAutoComplete(placeOriginal: String, function: (LatLng) -> Unit) {
+//    fun openPlaceAutoComplete(placeOriginal: String, function: (Place) -> Unit) {
 //        var statusCode = -1
 //        try {
 //            context.startActivityForResult(PlaceAutocomplete
@@ -130,10 +118,10 @@ class AppSettings(val context: BaseActivity) {
 //        if (statusCode != -1) {
 //            GoogleApiAvailability.getInstance().showErrorDialogFragment(context, statusCode, 30422)
 //        }
-//        context.resultRegistry.onActivityResult { requestCode, resultCode, intent ->
+//        context.resultLife.onActivityResult { requestCode, resultCode, intent ->
 //            if (requestCode != RC_OPEN_PLACE_AUTO_COMPLETE || intent == null) return@onActivityResult
 //            if (resultCode == RESULT_OK) {
-//                function(PlaceAutocomplete.getPlace(context, intent).latLng)
+//                function(PlaceAutocomplete.getPlace(context, intent))
 //            } else if (resultCode == RESULT_ERROR) {
 //                Toast.makeText(context, PlaceAutocomplete.getStatus(context, intent).statusMessage,
 //                    Toast.LENGTH_SHORT).show()
@@ -189,10 +177,5 @@ class AppSettings(val context: BaseActivity) {
 //        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
 //        context.startActivityForResult(intent, REQUEST_ENABLE_GPS)
 //    }
-
-
-    fun openGalleryForVideo(any: Any) {
-
-    }
 }
 

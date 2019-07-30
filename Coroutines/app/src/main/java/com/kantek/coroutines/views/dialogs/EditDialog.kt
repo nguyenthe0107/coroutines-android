@@ -1,11 +1,11 @@
 package com.kantek.coroutines.views.dialogs
 
 import android.support.core.base.BaseDialog
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import com.kantek.coroutines.R
 import kotlinx.android.synthetic.main.dialog_edit.*
 
-class EditDialog(fragment: Fragment) : BaseDialog(fragment) {
+class EditDialog(fragment: androidx.fragment.app.Fragment) : BaseDialog(fragment) {
     var onOkClickListener: ((Pair<Int, String>) -> Unit)? = null
 
     init {

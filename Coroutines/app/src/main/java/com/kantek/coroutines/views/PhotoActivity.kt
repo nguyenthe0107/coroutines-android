@@ -5,8 +5,8 @@ import android.support.core.annotations.LayoutId
 import android.support.core.base.EmptyViewModel
 import android.support.core.extensions.argument
 import android.support.core.extensions.asArgument
-import android.support.core.extensions.openForResult
 import android.support.core.functional.Dispatcher
+import android.support.core.functional.openForResult
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppActivity
 import com.kantek.coroutines.models.Photo
@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.activity_photo.*
 class PhotoActivity : AppActivity<EmptyViewModel>() {
     companion object {
         fun show(from: Dispatcher, it: Photo) {
-            from.openForResult(PhotoActivity::class, it.asArgument())
+            from.openForResult<PhotoActivity>(it.asArgument())
         }
     }
 

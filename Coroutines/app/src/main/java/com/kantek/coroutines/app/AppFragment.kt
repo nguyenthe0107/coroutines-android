@@ -1,8 +1,8 @@
 package com.kantek.coroutines.app
 
-import android.arch.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
-import android.support.annotation.StringRes
+import androidx.annotation.StringRes
 import android.support.core.annotations.LayoutId
 import android.support.core.annotations.ShareViewModel
 import android.support.core.annotations.SharedOf

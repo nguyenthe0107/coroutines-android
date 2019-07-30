@@ -1,19 +1,30 @@
 package android.support.core.base
 
-import android.arch.lifecycle.Observer
-import android.support.annotation.LayoutRes
-import android.support.v7.widget.RecyclerView
+import androidx.annotation.LayoutRes
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import kotlinx.android.extensions.LayoutContainer
 
 @Suppress("UNCHECKED_CAST")
-open class RecyclerHolder<T>(private val parent: ViewGroup, @LayoutRes id: Int) : RecyclerView.ViewHolder(inflate(parent, id)), Observer<T> {
+open class RecyclerHolder<T> : RecyclerView.ViewHolder, LayoutContainer {
+    private var mParent: ViewGroup
+
+    constructor(parent: ViewGroup, @LayoutRes id: Int) : super((inflate(parent, id))) {
+        this.mParent = parent
+    }
+
+    constructor(itemView: View) : super(itemView) {
+        this.mParent = itemView.parent as ViewGroup
+    }
+
+    override val containerView = itemView
 
     var item: T? = null
         private set
 
-    private val mAdapter get() = ((parent as RecyclerView).adapter as RecyclerAdapter<*>)
+    private val mAdapter get() = ((mParent as RecyclerView).adapter as RecyclerView.Adapter<*>)
 
     open fun bind(item: T) {
         this.item = item
@@ -26,13 +37,9 @@ open class RecyclerHolder<T>(private val parent: ViewGroup, @LayoutRes id: Int) 
     open fun onRecycled() {
     }
 
-    override fun onChanged(t: T?) {
-        bind(t!!)
-    }
-
     fun fitSpanCount(count: Int, byWidth: Boolean) {
         itemView.layoutParams.apply {
-            width = parent.measuredWidth / count
+            width = mParent.measuredWidth / count
             height = width
         }
     }

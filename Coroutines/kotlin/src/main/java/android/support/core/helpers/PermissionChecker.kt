@@ -8,9 +8,9 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import android.support.core.base.BaseActivity
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AlertDialog
 
 
 open class PermissionChecker(private val activity: BaseActivity) {
@@ -78,8 +78,7 @@ open class PermissionChecker(private val activity: BaseActivity) {
             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
             Uri.parse("package:" + activity.packageName))
         activity.startActivityForResult(intent, REQUEST_PERMISSION_CHECKER)
-        activity.resultLife.onActivityResult { requestCodeReceived, _, _ ->
-            if (REQUEST_PERMISSION_CHECKER != requestCodeReceived) return@onActivityResult
+        activity.resultLife.onActivityResult(REQUEST_PERMISSION_CHECKER) { _, _ ->
             onPermission(isAllowed(*permissions))
         }
     }

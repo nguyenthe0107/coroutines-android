@@ -1,7 +1,7 @@
 package android.support.core.di
 
 import android.app.Application
-import android.arch.lifecycle.ViewModel
+import androidx.lifecycle.ViewModel
 import android.content.Context
 import java.util.*
 
@@ -66,8 +66,8 @@ class DependenceContext private constructor(application: Application) {
          * @param classes     modules classes
          */
         fun init(application: Application, vararg classes: Class<*>) {
-            DependenceContext.sInstance = DependenceContext(application)
-            DependenceContext.sInstance.registryModuleClasses(*classes)
+            sInstance = DependenceContext(application)
+            sInstance.registryModuleClasses(*classes)
         }
     }
 }

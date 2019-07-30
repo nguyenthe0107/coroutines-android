@@ -1,48 +1,15 @@
 package android.support.core.extensions
 
-import android.app.Activity
-import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.os.Parcelable
 import android.support.core.annotations.SharedOf
-import android.support.core.base.BaseActivity
-import android.support.core.base.BaseFragment
 import android.support.core.factory.ViewModelFactory
-import android.support.core.functional.Dispatcher
-import android.support.core.lifecycle.ResultLifecycle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
-import android.support.v7.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import java.io.Serializable
-import kotlin.reflect.KClass
 
-const val REQUEST_FOR_RESULT_INSTANTLY = 1000
-
-fun Dispatcher.open(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): Dispatcher {
-    when (this) {
-        is Fragment -> startActivity(Intent(activity, clazz.java).put(args))
-        is Activity -> startActivity(Intent(this, clazz.java).put(args))
-        else -> throw IllegalArgumentException("This is not instance of activity or fragment")
-    }
-    return this
-}
-
-fun Dispatcher.openForResult(clazz: KClass<out AppCompatActivity>, vararg args: Pair<String, Any>): ResultLifecycle {
-    when (this) {
-        is BaseFragment -> startActivityForResult(Intent(activity, clazz.java).put(args), REQUEST_FOR_RESULT_INSTANTLY)
-        is BaseActivity -> startActivityForResult(Intent(this, clazz.java).put(args), REQUEST_FOR_RESULT_INSTANTLY)
-        else -> throw IllegalArgumentException("This is not instance of BaseActivity or BaseFragment")
-    }
-    return getResultLifecycle()
-}
-
-fun Dispatcher.close() {
-    when (this) {
-        is Fragment -> activity!!.finish()
-        is Activity -> finish()
-    }
-}
 
 private fun Intent.put(args: Array<out Pair<String, Any>>): Intent {
     args.forEach {

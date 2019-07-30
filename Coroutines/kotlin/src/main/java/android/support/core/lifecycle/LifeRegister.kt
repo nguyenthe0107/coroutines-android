@@ -1,6 +1,6 @@
 package android.support.core.lifecycle
 
-import android.arch.lifecycle.*
+import androidx.lifecycle.*
 
 
 class LifeRegister(private val registry: LifecycleRegistry) {

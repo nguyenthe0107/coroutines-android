@@ -2,13 +2,13 @@ package com.kantek.coroutines.views.adapters
 
 import android.support.core.base.RecyclerAdapter
 import android.support.core.base.RecyclerHolder
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
 import com.kantek.coroutines.R
 import com.kantek.coroutines.models.Todo
 import kotlinx.android.synthetic.main.item_view_todo.view.*
 
-class TodoAdapter(view: RecyclerView) : RecyclerAdapter<Todo>(view) {
+class TodoAdapter(view: androidx.recyclerview.widget.RecyclerView) : RecyclerAdapter<Todo>(view) {
     var onItemClickListener: ((Todo) -> Unit)? = null
 
     fun notifyItemChanged(todo: Todo) {

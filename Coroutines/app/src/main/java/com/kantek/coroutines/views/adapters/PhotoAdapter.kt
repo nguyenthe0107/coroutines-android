@@ -2,13 +2,13 @@ package com.kantek.coroutines.views.adapters
 
 import android.support.core.base.RecyclerAdapter
 import android.support.core.base.RecyclerHolder
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
 import com.kantek.coroutines.R
 import com.kantek.coroutines.models.Photo
 import kotlinx.android.synthetic.main.item_view_photo.view.*
 
-class PhotoAdapter(view: RecyclerView) : RecyclerAdapter<Photo>(view) {
+class PhotoAdapter(view: androidx.recyclerview.widget.RecyclerView) : RecyclerAdapter<Photo>(view) {
     var onItemClickListener: ((Photo) -> Unit)? = null
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int) = object :

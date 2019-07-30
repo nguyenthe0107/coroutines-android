@@ -1,11 +1,12 @@
 package android.support.core.utils;
 
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class ClassUtils {
@@ -21,9 +22,22 @@ public class ClassUtils {
      */
     public static <T> Class<T> getFirstGenericParameter(Object obj) {
         Class clazz = obj.getClass();
-        if (!sClassCache.hasFirstGenericType(clazz))
+        if (!sClassCache.hasGenericType(clazz, 0))
             throw new RuntimeException(clazz.getSimpleName() + " has not first position");
-        return sClassCache.getFirstGenericType(clazz);
+        return sClassCache.getGenericType(clazz, 0);
+    }
+
+    /**
+     * Get parameter type of object at position
+     *
+     * @param obj Any object
+     * @return List types of parameter on object
+     */
+    public static <T> Class<T> getGenericParameter(Object obj, int index) {
+        Class clazz = obj.getClass();
+        if (!sClassCache.hasGenericType(clazz, index))
+            throw new RuntimeException(clazz.getSimpleName() + " has not first position");
+        return sClassCache.getGenericType(clazz, index);
     }
 
     /**
@@ -42,28 +56,33 @@ public class ClassUtils {
 
     @VisibleForTesting
     public static class ClassCache {
-        private final Map<String, Class> mFirstGenericTypeCache = new HashMap<>();
+        private final Map<String, Class> mGenericTypeCache = new HashMap<>();
         private final Map<String, HasAnnotationMap> mHasAnnotation = new HashMap<>();
         private final Map<String, AnnotationValueMap> mAnnotationCache = new HashMap<>();
 
-        boolean hasFirstGenericType(Class clazz) {
-            if (mFirstGenericTypeCache.containsKey(clazz.getName())) {
-                return mFirstGenericTypeCache.get(clazz.getName()) != null;
+        boolean hasGenericType(Class clazz, int index) {
+            String genType = formatGenericType(clazz, index);
+            if (mGenericTypeCache.containsKey(genType)) {
+                return mGenericTypeCache.get(genType) != null;
             }
             Type[] types = findParameterTypes(clazz, 0);
             if (types == null || types.length == 0) {
-                mFirstGenericTypeCache.put(clazz.getName(), null);
+                mGenericTypeCache.put(genType, null);
                 return false;
             }
-            Type firstType = types[0];
-            if (!(firstType instanceof Class))
+            Type type = types[index];
+            if (!(type instanceof Class))
                 throw new RuntimeException("First parameter type need to be class");
-            mFirstGenericTypeCache.put(clazz.getName(), (Class) firstType);
+            mGenericTypeCache.put(genType, (Class) type);
             return true;
         }
 
-        Class getFirstGenericType(Class clazz) {
-            return mFirstGenericTypeCache.get(clazz.getName());
+        private String formatGenericType(Class clazz, int index) {
+            return String.format(Locale.getDefault(), "%s[%d]", clazz.getName(), index);
+        }
+
+        Class getGenericType(Class clazz, int index) {
+            return mGenericTypeCache.get(formatGenericType(clazz, index));
         }
 
         private Type[] findParameterTypes(Class clazz, int deep) {

@@ -1,6 +1,6 @@
 package android.support.core.helpers
 
-import android.arch.lifecycle.MutableLiveData
+import androidx.lifecycle.MutableLiveData
 import android.os.Handler
 import android.os.Looper
 import java.util.concurrent.Executor

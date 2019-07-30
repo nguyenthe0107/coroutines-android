@@ -2,10 +2,10 @@ package android.support.design.internal
 
 import android.content.res.TypedArray
 import android.support.R
-import android.support.annotation.NonNull
+import androidx.annotation.NonNull
 import android.support.design.internal.MenuOrderNavigator.Destination.Companion.ORDER_NOT_SET
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavDestination
 import androidx.navigation.Navigator
 
@@ -49,9 +49,7 @@ class MenuStackOrderNavigator(containerId: Int,
         current as DestinationWrapper
         target as DestinationWrapper
         if (current.order == ORDER_NOT_SET) {
-            if (target.order == ORDER_NOT_SET)
-                super.setPopAnimations(current, target)
-            else setCustomAnimations(current.animPopEnter, current.animPopExit)
+            super.setPopAnimations(current, target)
             return
         }
         val targetEnter = if (target.animEnter != 0) target.animEnter else current.animEnter
@@ -73,10 +71,10 @@ class MenuStackOrderNavigator(containerId: Int,
     class DestinationWrapper(destinationId: Int,
                              fragmentTag: String) : MenuStackNavigator.DestinationWrapper(destinationId, fragmentTag) {
         var keepInstance: Boolean = false
-        var order = ORDER_NOT_SET
+        var order = 0
 
         fun before(destination: DestinationWrapper) =
-            order - destination.order < 0
+                order - destination.order < 0
     }
 
     @NavDestination.ClassType(Fragment::class)

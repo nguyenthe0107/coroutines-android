@@ -1,17 +1,19 @@
 package android.support.core.base
 
 import android.app.Dialog
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
 import android.content.Context
 import android.graphics.PointF
 import android.os.Build
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.view.*
 import android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
 import android.view.Window.ID_ANDROID_CONTENT
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 abstract class BaseDialog(context: Context, lifecycle: Lifecycle?, themeRes: Int)
     : Dialog(context, themeRes) {
@@ -89,6 +91,6 @@ private fun View.contains(point: PointF): Boolean {
 }
 
 private fun PointF.isClick(event: MotionEvent): Boolean {
-    return Math.sqrt(Math.pow((x - event.x).toDouble(), 2.0)
-            + Math.pow((y - event.y).toDouble(), 2.0)) <= 10
+    return sqrt((x - event.x).toDouble().pow(2.0)
+            + (y - event.y).toDouble().pow(2.0)) <= 10
 }

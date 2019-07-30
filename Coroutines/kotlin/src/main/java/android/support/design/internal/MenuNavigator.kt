@@ -4,15 +4,14 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.support.R
-import android.support.annotation.NonNull
 import android.support.core.base.BaseFragment
 import android.support.core.extensions.addArgs
 import android.support.design.widget.MenuHostFragment
 import android.support.design.widget.SupportNavHostFragment
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
 import android.util.AttributeSet
+import androidx.annotation.NonNull
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
 import androidx.navigation.NavOptions
@@ -26,7 +25,7 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
     }
 
     lateinit var navGraph: NavGraph
-    private var mCurrentTransaction: FragmentTransaction? = null
+    private var mCurrentTransaction: androidx.fragment.app.FragmentTransaction? = null
     private var mCurrentId: Int = 0
     private lateinit var mOnNavigateChangedListener: (Int) -> Unit
 
@@ -121,7 +120,7 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
     protected abstract fun setNavigateAnimations(destination: Destination, enterAnim: Int, exitAnim: Int, popEnterAnim: Int, popExitAnim: Int)
 
     protected fun setCustomAnimations(enterAnim: Int, exitAnim: Int) {
-        mCurrentTransaction!!.setCustomAnimations(enterAnim, exitAnim)
+        mCurrentTransaction!!.setCustomAnimations(enterAnim, exitAnim, 0, 0)
     }
 
     private fun hideFragmentsIfNeeded(ignore: Fragment) {
@@ -137,7 +136,7 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
         mCurrentTransaction!!.hide(fragment)
     }
 
-    protected open fun instantiate(transaction: FragmentTransaction, destination: Destination, navOptions: NavOptions?): Fragment {
+    protected open fun instantiate(transaction: androidx.fragment.app.FragmentTransaction, destination: Destination, navOptions: NavOptions?): Fragment {
         val (fragment, isCreated) = createFragmentIfNeeded(navOptions, destination)
         val tag: String
         if (isCreated) {
@@ -168,7 +167,7 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
 
     protected abstract fun createFragmentIfNeeded(navOptions: NavOptions?, destination: Destination): Pair<Fragment, Boolean>
 
-    fun transaction(function: FragmentTransaction.() -> Unit) {
+    fun transaction(function: androidx.fragment.app.FragmentTransaction.() -> Unit) {
         startUpdate()
         function(mCurrentTransaction!!)
         finishUpdate()
@@ -219,12 +218,12 @@ abstract class MenuNavigator(val fragmentManager: FragmentManager) :
             val a = context.resources.obtainAttributes(attrs, R.styleable.FragmentNavigator)
             val className = a.getString(R.styleable.FragmentNavigator_android_name)
             if (className != null) {
-                setFragmentClass(parseClassFromName(context, className, Fragment::class.java))
+                setFragmentClass(parseClassFromName(context, className, Fragment::class.java) as Class<out Fragment>)
             }
             a.recycle()
 
-            val graph = context.obtainStyledAttributes(attrs, R.styleable.NavHostFragment)
-            mNavGraph = graph.getResourceId(R.styleable.NavHostFragment_navGraph, 0)
+            val graph = context.obtainStyledAttributes(attrs, R.styleable.NavHost)
+            mNavGraph = graph.getResourceId(R.styleable.NavHost_navGraph, 0)
             graph.recycle()
 
             val ta = context.obtainStyledAttributes(attrs, R.styleable.MenuHostFragment)

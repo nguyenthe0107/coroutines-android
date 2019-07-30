@@ -1,8 +1,8 @@
 package android.support.design.widget
 
 import android.os.Bundle
-import android.support.annotation.NavigationRes
-import android.support.annotation.NonNull
+import androidx.annotation.NavigationRes
+import androidx.annotation.NonNull
 import android.support.core.extensions.dispatchHidden
 import android.support.core.extensions.isVisibleOnScreen
 import android.support.core.functional.Backable

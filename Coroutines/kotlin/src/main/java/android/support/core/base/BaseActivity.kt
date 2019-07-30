@@ -8,7 +8,7 @@ import android.support.core.functional.Dispatcher
 import android.support.core.lifecycle.LifeRegister
 import android.support.core.lifecycle.ResultLifecycle
 import android.support.core.lifecycle.ResultRegistry
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 
 abstract class BaseActivity : AppCompatActivity(), Dispatcher {
@@ -29,6 +29,8 @@ abstract class BaseActivity : AppCompatActivity(), Dispatcher {
     protected open fun onActivityBackPressed() {
         super.onBackPressed()
     }
+
+    fun findFragmentById(id: Int) = supportFragmentManager.findFragmentById(id)
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

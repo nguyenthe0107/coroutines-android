@@ -21,6 +21,7 @@
     <declare-styleable name="BottomMenuView">
         <attr name="tabMenu" format="reference" />
         <attr name="tabCustom" format="boolean" />
+        <attr name="tabIconSelectedTint" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="MenuHostFragment">

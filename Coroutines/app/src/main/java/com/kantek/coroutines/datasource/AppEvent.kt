@@ -1,6 +1,6 @@
 package com.kantek.coroutines.datasource
 
-import android.arch.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleOwner
 import android.content.Context
 import android.support.core.di.Inject
 import android.support.core.event.BroadcastEvent

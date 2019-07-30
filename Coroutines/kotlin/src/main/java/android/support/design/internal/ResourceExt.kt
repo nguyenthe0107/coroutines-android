@@ -2,8 +2,8 @@ package android.support.design.internal
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.support.annotation.MenuRes
-import android.support.v7.view.menu.MenuBuilder
+import androidx.annotation.MenuRes
+import androidx.appcompat.view.menu.MenuBuilder
 import android.view.Menu
 import android.view.MenuInflater
 

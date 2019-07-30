@@ -51,3 +51,10 @@ inline fun <reified A : Annotation> Any.getAnnotation(): A? {
 fun <A> Any.getFirstGenericParameter(): Class<A> {
     return ClassUtils.getFirstGenericParameter<A>(this)
 }
+
+/**
+ * Get first generic parameter
+ */
+fun <A> Any.getGenericParameter(index: Int): Class<A> {
+    return ClassUtils.getGenericParameter<A>(this, index)
+}

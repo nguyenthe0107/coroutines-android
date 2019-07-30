@@ -2,7 +2,7 @@
 
 package com.kantek.coroutines.app
 
-import android.arch.persistence.room.Room
+import androidx.room.Room
 import android.content.Context
 import android.support.core.di.Provide
 import android.support.core.factory.TLSSocketFactory

@@ -1,6 +1,6 @@
 package android.support.core.base
 
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 
 @Suppress("UNCHECKED_CAST")
 abstract class RecyclerAdapter<T>(val view: RecyclerView) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -13,7 +13,7 @@ abstract class RecyclerAdapter<T>(val view: RecyclerView) : RecyclerView.Adapter
 
     private val mOnEnabledListeners = hashSetOf<(Boolean) -> Unit>()
 
-    var isEnabled: Boolean = false
+    open var isEnabled: Boolean = false
         set(value) {
             field = value
             mOnEnabledListeners.forEach { it(value) }

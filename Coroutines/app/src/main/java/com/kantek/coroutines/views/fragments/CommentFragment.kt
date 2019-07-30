@@ -16,6 +16,7 @@ class CommentFragment : AppFragment<EmptyViewModel>() {
         btnBackToPosts.setOnClickListener {
             MenuHostFragment.findNavController(this)!!
                 .navigate(R.id.hostPostFragment, navOptions = NavOptions.Builder()
+                    .setLaunchSingleTop(true)
                     .setPopUpTo(R.id.hostPostFragment, false)
                     .build())
         }

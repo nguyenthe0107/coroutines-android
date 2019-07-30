@@ -1,6 +1,6 @@
 package com.kantek.coroutines.datasource
 
-import android.arch.lifecycle.MutableLiveData
+import androidx.lifecycle.MutableLiveData
 import android.content.Context
 import android.support.core.di.Inject
 import android.support.core.extensions.loadOnDisk

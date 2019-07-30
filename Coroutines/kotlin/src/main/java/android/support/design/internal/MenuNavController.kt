@@ -3,8 +3,8 @@ package android.support.design.internal
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import android.support.annotation.IdRes
-import android.support.annotation.NonNull
+import androidx.annotation.IdRes
+import androidx.annotation.NonNull
 import android.support.core.functional.navigableOptions
 import androidx.navigation.*
 
@@ -60,21 +60,24 @@ class MenuNavController(context: Context) {
     }
 
     fun navigateToStart(): Boolean {
-        if (mNavigator.currentDestinationId == mNavGraph.startDestination) return false
-        mNavigator.navigate(mNavGraph.findDestination(mNavGraph.startDestination), null, null, null)
+        if (startDestination == 0) return false
+        if (mNavigator.currentDestinationId == startDestination) return false
+        mNavigator.navigate(mNavGraph.findDestination(startDestination), null, null, null)
         return true
     }
+
+    fun navigateUp() = mNavigator.popBackStack()
 
     fun setOnNavigateChangeListener(function: (Int) -> Unit) {
         mOnNavigatorChangedListener = function
     }
 
     fun getDestinationActivated(activated: Boolean): MenuNavigator.Destination {
-        return if (!activated) mNavGraph.findDestination(mNavGraph.startDestination)
-        else mNavGraph.find { it.id != mNavGraph.startDestination } as MenuNavigator.Destination
+        return if (!activated) mNavGraph.findDestination(startDestination)
+        else mNavGraph.find { it.id != startDestination } as MenuNavigator.Destination
     }
 
-    fun getActivated(@IdRes desId: Int) = mNavGraph.startDestination != desId
+    fun getActivated(@IdRes desId: Int) = startDestination != desId
 
     fun getDestinationCount(): Int {
         return mNavGraph.count()
@@ -100,18 +103,13 @@ class MenuNavController(context: Context) {
         return state
     }
 
-    fun navigateUp(): Boolean {
-        if (mNavigator is MenuStackNavigator) return mNavigator.popBackStack()
-        return false
-    }
-
     companion object {
         fun animOptions() = NavOptions.Builder()
-                .setEnterAnim(android.support.R.anim.default_fade_in)
-                .setExitAnim(android.support.R.anim.default_fade_out)
-                .setPopEnterAnim(android.support.R.anim.default_fade_in)
-                .setPopExitAnim(android.support.R.anim.default_fade_out)
-                .build()
+            .setEnterAnim(android.support.R.anim.default_fade_in)
+            .setExitAnim(android.support.R.anim.default_fade_out)
+            .setPopEnterAnim(android.support.R.anim.default_fade_in)
+            .setPopExitAnim(android.support.R.anim.default_fade_out)
+            .build()
 
         private const val KEY_GRAPH_ID = "android-support-nav:controller:graphId"
     }

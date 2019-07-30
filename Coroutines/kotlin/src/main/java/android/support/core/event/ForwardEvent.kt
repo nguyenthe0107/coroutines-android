@@ -1,11 +1,11 @@
 package android.support.core.event
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
 import android.support.core.base.BaseFragment
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 
 abstract class ForwardEvent<T : Any, K : Any> {
     private val mOwners = hashMapOf<LifecycleOwner, MutableMap<(T?) -> Unit, Notify<*>>>()

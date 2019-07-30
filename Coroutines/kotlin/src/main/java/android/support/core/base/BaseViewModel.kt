@@ -1,11 +1,12 @@
 package android.support.core.base
 
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import android.support.core.event.LoadingEvent
 import android.support.core.event.RefreshEvent
 import android.support.core.event.SingleLiveEvent
+import android.support.core.extensions.withIO
 import android.support.core.lifecycle.LifeRegistry
 import android.util.Log
 import kotlinx.coroutines.*
@@ -32,7 +33,7 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
     ) = mScope.launch {
         try {
             loading?.postValue(true)
-            block()
+            withIO(block)
         } catch (e: CancellationException) {
             Log.i(this@BaseViewModel.javaClass.name, e.message ?: "Unknown")
         } catch (e: Throwable) {
@@ -45,13 +46,18 @@ abstract class BaseViewModel : ViewModel(), LifecycleOwner {
         }
     }
 
+    suspend fun <T> onMain(block: suspend CoroutineScope.() -> T) =
+        withContext(Dispatchers.Main, block)
+
+    suspend fun <T> onBackground(block: suspend CoroutineScope.() -> T) =
+        withContext(Dispatchers.IO, block)
+
     override fun onCleared() {
-        System.gc()
         mLife.stop().destroy()
         mScope.coroutineContext.cancel()
     }
 
     private class ViewModelScope : CoroutineScope {
-        override val coroutineContext: CoroutineContext = Job() + Dispatchers.IO
+        override val coroutineContext: CoroutineContext = Job() + Dispatchers.Main
     }
 }

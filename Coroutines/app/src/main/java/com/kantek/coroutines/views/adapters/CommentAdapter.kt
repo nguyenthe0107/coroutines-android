@@ -2,13 +2,13 @@ package com.kantek.coroutines.views.adapters
 
 import android.support.core.base.RecyclerAdapter
 import android.support.core.base.RecyclerHolder
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
 import com.kantek.coroutines.R
 import com.kantek.coroutines.models.Comment
 import kotlinx.android.synthetic.main.item_view_comment.view.*
 
-class CommentAdapter(view: RecyclerView) : RecyclerAdapter<Comment>(view) {
+class CommentAdapter(view: androidx.recyclerview.widget.RecyclerView) : RecyclerAdapter<Comment>(view) {
     var onItemClickListener: ((Comment) -> Unit)? = null
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int) = object :

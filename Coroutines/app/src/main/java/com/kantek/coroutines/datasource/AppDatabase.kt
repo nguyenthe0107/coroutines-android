@@ -1,6 +1,6 @@
 package com.kantek.coroutines.datasource
 
-import android.arch.persistence.room.*
+import androidx.room.*
 import com.kantek.coroutines.models.Todo
 
 @Database(entities = [Todo::class], version = 1, exportSchema = false)

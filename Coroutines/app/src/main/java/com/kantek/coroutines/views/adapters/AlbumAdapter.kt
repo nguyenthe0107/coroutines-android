@@ -2,13 +2,13 @@ package com.kantek.coroutines.views.adapters
 
 import android.support.core.base.RecyclerAdapter
 import android.support.core.base.RecyclerHolder
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
 import com.kantek.coroutines.R
 import com.kantek.coroutines.models.Album
 import kotlinx.android.synthetic.main.item_view_post.view.*
 
-class AlbumAdapter(view: RecyclerView) : RecyclerAdapter<Album>(view) {
+class AlbumAdapter(view: androidx.recyclerview.widget.RecyclerView) : RecyclerAdapter<Album>(view) {
     var onItemClickListener: ((Album) -> Unit)? = null
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int) = object :

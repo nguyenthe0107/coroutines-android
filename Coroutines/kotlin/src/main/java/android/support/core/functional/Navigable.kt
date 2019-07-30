@@ -1,7 +1,7 @@
 package android.support.core.functional
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 
 private const val KEY_NAVIGATE_ARGS = "android-support-nav:fragment:navigate:args"
 private const val KEY_NAVIGATE_CHILD_ID = "android-support-nav:fragment:navigate:childId"
@@ -16,6 +16,7 @@ interface Navigable {
     }
 
     fun navigateTo(desId: Int, args: Bundle?) {
+        throw RuntimeException("Not implement")
     }
 }
 
@@ -34,5 +35,5 @@ fun navigableOptions(childId: Int, navArgs: Bundle?) = Bundle().apply {
     putBundle(KEY_NAVIGATE_ARGS, navArgs)
 }
 
-fun Fragment.navigateIfNeeded(function: (childId: Int, navArgs: Bundle?) -> Unit) =
-    navigateIfNeeded(arguments!!, function)
+fun Fragment.navigateIfNeeded(function: (childId: Int, navArgs: Bundle?) -> Unit): Boolean =
+    if (arguments != null) navigateIfNeeded(arguments!!, function) else false

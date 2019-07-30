@@ -1,6 +1,6 @@
 package android.support.core.event
 
-import android.arch.lifecycle.MutableLiveData
+import androidx.lifecycle.MutableLiveData
 
 open class LoadingEvent : MutableLiveData<Boolean>() {
     private var mNumOfLoading = 0

@@ -1,8 +1,7 @@
 package android.support.core.lifecycle
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.LifecycleRegistry
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 
 class LifeRegistry(provider: LifecycleOwner) : LifecycleRegistry(provider) {
 
@@ -16,7 +15,7 @@ class LifeRegistry(provider: LifecycleOwner) : LifecycleRegistry(provider) {
 
     fun create(): LifeRegistry {
         synchronized(this) {
-            handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+            handleLifecycleEvent(Event.ON_CREATE)
             isCreated = true
             if (isUsedToDestroyed) isReCreated = true
         }
@@ -26,7 +25,7 @@ class LifeRegistry(provider: LifecycleOwner) : LifecycleRegistry(provider) {
     fun start(): LifeRegistry {
         synchronized(this) {
             if (!isCreated) create()
-            handleLifecycleEvent(Lifecycle.Event.ON_START)
+            handleLifecycleEvent(Event.ON_START)
         }
         return this
     }
@@ -34,15 +33,15 @@ class LifeRegistry(provider: LifecycleOwner) : LifecycleRegistry(provider) {
     fun resume(): LifeRegistry {
         synchronized(this) {
             if (!isCreated) create().start()
-            handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            handleLifecycleEvent(Event.ON_RESUME)
         }
         return this
     }
 
     fun pause(): LifeRegistry {
         synchronized(this) {
-            if (currentState == Lifecycle.State.RESUMED)
-                handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+            if (currentState == State.RESUMED)
+                handleLifecycleEvent(Event.ON_PAUSE)
         }
         return this
     }
@@ -51,11 +50,11 @@ class LifeRegistry(provider: LifecycleOwner) : LifecycleRegistry(provider) {
         synchronized(this) {
             isReCreated = false
             when (currentState) {
-                Lifecycle.State.STARTED ->
-                    handleLifecycleEvent(Lifecycle.Event.ON_STOP)
-                Lifecycle.State.RESUMED -> {
-                    handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-                    handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+                State.STARTED ->
+                    handleLifecycleEvent(Event.ON_STOP)
+                State.RESUMED -> {
+                    handleLifecycleEvent(Event.ON_PAUSE)
+                    handleLifecycleEvent(Event.ON_STOP)
                 }
                 else -> {
                 }
@@ -68,17 +67,17 @@ class LifeRegistry(provider: LifecycleOwner) : LifecycleRegistry(provider) {
         synchronized(this) {
             if (!isCreated) return this
             when (currentState) {
-                Lifecycle.State.CREATED -> {
-                    handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                State.CREATED -> {
+                    handleLifecycleEvent(Event.ON_DESTROY)
                 }
-                Lifecycle.State.STARTED -> {
-                    handleLifecycleEvent(Lifecycle.Event.ON_STOP)
-                    handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                State.STARTED -> {
+                    handleLifecycleEvent(Event.ON_STOP)
+                    handleLifecycleEvent(Event.ON_DESTROY)
                 }
-                Lifecycle.State.RESUMED -> {
-                    handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-                    handleLifecycleEvent(Lifecycle.Event.ON_STOP)
-                    handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                State.RESUMED -> {
+                    handleLifecycleEvent(Event.ON_PAUSE)
+                    handleLifecycleEvent(Event.ON_STOP)
+                    handleLifecycleEvent(Event.ON_DESTROY)
                 }
                 else -> {
                 }

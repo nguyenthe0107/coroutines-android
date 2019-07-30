@@ -22,7 +22,7 @@
         app:popEnterAnim="@anim/slide_in_from_left"
         app:popExitAnim="@anim/slide_out_to_right" />
 
-    <android.support.design.widget.BottomMenuView
+    <com.google.android.material.tabs.BottomMenuView
         android:id="@+id/viewBottomMenu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

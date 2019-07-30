@@ -5,8 +5,8 @@ import android.support.core.annotations.LayoutId
 import android.support.core.extensions.argument
 import android.support.core.extensions.asArgument
 import android.support.core.extensions.observe
-import android.support.core.extensions.open
 import android.support.core.functional.Dispatcher
+import android.support.core.functional.open
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppActivity
 import com.kantek.coroutines.models.Album
@@ -18,7 +18,7 @@ import kotlinx.android.synthetic.main.activity_album_detail.*
 class AlbumDetailActivity : AppActivity<AlbumViewModel>() {
     companion object {
         fun show(from: Dispatcher, it: Album) {
-            from.open(AlbumDetailActivity::class, it.asArgument())
+            from.open<AlbumDetailActivity>(it.asArgument())
         }
     }
 

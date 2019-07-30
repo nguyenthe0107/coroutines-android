@@ -2,10 +2,10 @@ package com.kantek.coroutines.views
 
 import android.os.Bundle
 import android.support.core.annotations.LayoutId
-import android.support.core.extensions.close
 import android.support.core.extensions.observe
-import android.support.core.extensions.open
 import android.support.core.functional.Dispatcher
+import android.support.core.functional.close
+import android.support.core.functional.open
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppActivity
 import com.kantek.coroutines.viewmodel.LoginViewModel
@@ -15,7 +15,7 @@ import kotlinx.android.synthetic.main.activity_login.*
 class LoginActivity : AppActivity<LoginViewModel>() {
     companion object {
         fun show(from: Dispatcher) {
-            from.open(LoginActivity::class).close()
+            from.open<LoginActivity>().close()
         }
     }
 

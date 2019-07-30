@@ -1,15 +1,15 @@
 package android.support.core.event
 
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MediatorLiveData
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 
 open class RefreshEvent<T>(
     private val owner: LifecycleOwner,
     /**
      * In milliseconds
      */
-    private val timeRate: Long = 200
+    private val timeRate: Long = 0
 ) : MediatorLiveData<T>() {
     private var mOnActivated: (() -> Unit)? = null
     private var mActivated = false
@@ -35,8 +35,7 @@ open class RefreshEvent<T>(
     fun addEvent(event: ForwardEvent<out Any, out Any>, vararg data: LiveData<out Any?>, function: ((Any?) -> Unit)? = null) {
         event.observe(owner) {
             val shouldRefresh = data.fold(false) { acc, item -> acc || item.value == null }
-            if (!shouldRefresh) return@observe
-            if (function != null) function(it) else onEvent(it)
+            if (shouldRefresh) if (function != null) function(it) else onEvent(it)
         }
     }
 
@@ -67,19 +66,12 @@ open class RefreshEvent<T>(
     }
 
     fun call() {
+        if (timeRate > 0) {
+            val current = System.currentTimeMillis()
+            if (current - mLastCalled < timeRate) return
+            mLastCalled = current
+        }
         value = value
-    }
-
-    override fun setValue(value: T?) {
-        if (shouldCall()) super.setValue(value)
-    }
-
-    private fun shouldCall(): Boolean {
-        if (timeRate <= 0) return false
-        val current = System.currentTimeMillis()
-        if (current - mLastCalled < timeRate) return false
-        mLastCalled = current
-        return true
     }
 }
 
@@ -87,7 +79,7 @@ class RequestEvent<T>(owner: LifecycleOwner) : RefreshEvent<T>(owner) {
     private var mStoreValue: T? = null
 
     override fun onEvent(eventValue: Any?) {
-        if (mStoreValue != null) postValue(mStoreValue)
+        postValue(mStoreValue)
     }
 
     override fun setValue(value: T?) {

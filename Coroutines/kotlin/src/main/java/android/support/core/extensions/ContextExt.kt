@@ -8,14 +8,15 @@ import android.app.KeyguardManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Point
 import android.os.Build
-import android.support.annotation.ColorRes
-import android.support.annotation.RequiresApi
-import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
+import androidx.annotation.ColorRes
+import androidx.annotation.RequiresApi
+import androidx.fragment.app.Fragment
+import androidx.core.content.ContextCompat
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewConfiguration
@@ -81,21 +82,26 @@ fun Activity.setBarsTransparent() {
  */
 fun View.showKeyboard(value: Boolean) {
     val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-    if (!value) {
+    if (value) {
         requestFocus()
         (this as? EditText)?.setSelection(text.length)
         imm.showSoftInput(this, 0)
     } else imm.hideSoftInputFromWindow(windowToken, 0)
 }
 
+val Context.activity: Activity?
+    get() = when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.activity
+        else -> null
+    }
+
 
 /**
  * Hide keyboard from context
  */
 fun Context.showKeyboard(value: Boolean) {
-    val imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-    if (!value) imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
-    else imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+    this.activity?.showKeyboard(value)
 }
 
 /**
@@ -110,7 +116,7 @@ fun Activity.showKeyboard(value: Boolean) {
 /**
  * Hide Keyboard from view on fragment
  */
-fun Fragment.showKeyboard(value: Boolean) = view!!.showKeyboard(value)
+fun androidx.fragment.app.Fragment.showKeyboard(value: Boolean) = view!!.showKeyboard(value)
 
 /**
  * Hide System UI of [Activity], make Activity screen as Immersive

@@ -1,6 +1,6 @@
 package com.kantek.coroutines.app
 
-import android.support.annotation.StringRes
+import androidx.annotation.StringRes
 
 class AlertException(val resource: Int) : Throwable()
 

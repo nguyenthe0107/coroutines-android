@@ -1,9 +1,9 @@
 package android.support.design.internal
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
 import java.io.Serializable
@@ -26,7 +26,11 @@ open class MenuStackNavigator(private val containerId: Int,
 
     @Suppress("unchecked_cast")
     override fun onRestoreState(savedState: Bundle) {
-        mStack = savedState.getSerializable(KEY_STACK) as Stack<DestinationWrapper>
+        val stack = savedState.getSerializable(KEY_STACK)
+        mStack = if (stack is Stack<*>) stack as Stack<DestinationWrapper>
+        else Stack<DestinationWrapper>().apply {
+            addAll(stack as ArrayList<DestinationWrapper>)
+        }
         super.onRestoreState(savedState)
     }
 
@@ -37,8 +41,8 @@ open class MenuStackNavigator(private val containerId: Int,
         return findFragment(tag)
     }
 
-    override fun instantiate(transaction: FragmentTransaction, destination: MenuNavigator.Destination, navOptions: NavOptions?): Fragment {
-        if (navOptions != null && navOptions.popUpTo != -1) mStack.popUntil(navOptions.popUpTo, navOptions.isPopUpToInclusive) {
+    override fun instantiate(transaction: FragmentTransaction, destination: Destination, navOptions: NavOptions?): Fragment {
+        if (navOptions != null && navOptions.popUpTo != -1) mStack.popUntil(navOptions) {
             if (shouldReuse(this)) return@popUntil
             if (destinationId != destination.id || !navOptions.shouldLaunchSingleTop())
                 transaction.remove(it)
@@ -72,9 +76,8 @@ open class MenuStackNavigator(private val containerId: Int,
     }
 
     private fun Stack<DestinationWrapper>.popUntil(
-            popUpTo: Int,
-            popUpToInclusive: Boolean,
-            function: DestinationWrapper.(Fragment) -> Unit) {
+        navOptions: NavOptions,
+        function: DestinationWrapper.(Fragment) -> Unit) {
         val accept = {
             val top = pop()
             function(top, findFragment(top.fragmentTag)!!)
@@ -82,8 +85,8 @@ open class MenuStackNavigator(private val containerId: Int,
         while (true) {
             if (empty()) return
             val element = lastElement()
-            if (element.destinationId == popUpTo) {
-                if (popUpToInclusive) accept()
+            if (element.destinationId == navOptions.popUpTo) {
+                if (navOptions.isPopUpToInclusive) accept()
                 return
             }
             accept()
@@ -93,16 +96,9 @@ open class MenuStackNavigator(private val containerId: Int,
     override fun popBackStack(): Boolean {
         if (mStack.isEmpty()) return false
         val current = mStack.pop() ?: return false
-
-        if (mStack.isEmpty()) {
-            val startDestination = navGraph.findStartDestination()
-            if (current.destinationId != startDestination.id) {
-                navigate(startDestination, null, current.getNavOptions(), null)
-                return true
-            }
-            return false
-        }
+        if (mStack.isEmpty()) return false
         val target = mStack.lastElement()
+
         transaction {
             setPopAnimations(current, target)
             val currentFragment = findFragment(current.fragmentTag)!!
@@ -155,11 +151,11 @@ open class MenuStackNavigator(private val containerId: Int,
 
         fun getNavOptions(): NavOptions {
             return NavOptions.Builder()
-                    .setEnterAnim(animEnter)
-                    .setExitAnim(animExit)
-                    .setPopEnterAnim(animPopEnter)
-                    .setPopExitAnim(animPopExit)
-                    .build()
+                .setEnterAnim(animEnter)
+                .setExitAnim(animExit)
+                .setPopEnterAnim(animPopEnter)
+                .setPopExitAnim(animPopExit)
+                .build()
         }
     }
 }

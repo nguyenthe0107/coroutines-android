@@ -1,6 +1,6 @@
 package android.support.core.helpers
 
-import android.support.annotation.WorkerThread
+import androidx.annotation.WorkerThread
 import java.util.concurrent.TimeUnit
 
 open class TemporaryData<K, V>(

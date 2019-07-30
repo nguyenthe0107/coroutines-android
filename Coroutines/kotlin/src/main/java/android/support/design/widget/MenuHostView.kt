@@ -1,19 +1,19 @@
 package android.support.design.widget
 
 import android.annotation.SuppressLint
-import android.arch.lifecycle.Lifecycle
+import androidx.lifecycle.Lifecycle
 import android.content.Context
-import android.support.R
-import android.support.annotation.NavigationRes
+import androidx.annotation.NavigationRes
 import android.support.core.base.BaseFragment
 import android.support.core.functional.MenuOwner
 import android.support.design.internal.MenuNavController
 import android.support.design.internal.MenuOrderNavigator
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import androidx.navigation.fragment.R
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Deprecated("Unused")
@@ -34,8 +34,8 @@ class MenuHostView(context: Context, attrs: AttributeSet?) : FrameLayout(context
 
     @SuppressLint("CustomViewStyleable")
     private fun loadAttrs(attrs: AttributeSet?) {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.NavHostFragment)
-        mGraphId = a.getResourceId(R.styleable.NavHostFragment_navGraph, 0)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.NavHost)
+        mGraphId = a.getResourceId(R.styleable.NavHost_navGraph, 0)
         a.recycle()
     }
 

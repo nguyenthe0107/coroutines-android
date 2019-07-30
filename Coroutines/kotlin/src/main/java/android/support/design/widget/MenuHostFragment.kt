@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.support.R
-import android.support.annotation.IdRes
-import android.support.annotation.NavigationRes
 import android.support.core.extensions.addArgs
 import android.support.core.extensions.dispatchHidden
 import android.support.core.extensions.isVisibleOnScreen
@@ -13,12 +11,14 @@ import android.support.core.functional.Backable
 import android.support.core.functional.MenuOwner
 import android.support.core.functional.navigateIfNeeded
 import android.support.design.internal.*
-import android.support.v4.app.Fragment
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.annotation.IdRes
+import androidx.annotation.NavigationRes
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavOptions
 
 class MenuHostFragment : Fragment(), Backable {
@@ -49,8 +49,7 @@ class MenuHostFragment : Fragment(), Backable {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return FrameLayout(inflater.context).also { it.id = id }
     }
 
@@ -79,13 +78,13 @@ class MenuHostFragment : Fragment(), Backable {
         navigateIfNeeded { childId, navArgs -> navController!!.navigate(childId, navArgs) }
 
     private fun setMenu(menuId: Int) {
-        setupWithView(view!!.rootView.findViewById<View>(menuId))
+        setupWithView(view!!.rootView.findViewById(menuId))
     }
 
-    override fun onInflate(context: Context?, attrs: AttributeSet?, savedInstanceState: Bundle?) {
+    override fun onInflate(context: Context, attrs: AttributeSet, savedInstanceState: Bundle?) {
         super.onInflate(context, attrs, savedInstanceState)
-        val a = context!!.obtainStyledAttributes(attrs, R.styleable.NavHostFragment)
-        val graphId = a.getResourceId(R.styleable.NavHostFragment_navGraph, 0)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.NavHost)
+        val graphId = a.getResourceId(R.styleable.NavHost_navGraph, 0)
         a.recycle()
 
         val ta = context.obtainStyledAttributes(attrs, R.styleable.MenuHostFragment)
@@ -150,7 +149,7 @@ class MenuHostFragment : Fragment(), Backable {
             .setPopEnterAnim(navOptions.popEnterAnim)
             .setPopExitAnim(navOptions.popExitAnim)
             .setLaunchSingleTop(true)
-            .setPopUpTo(navController!!.startDestination, true)
+            .setPopUpTo(navController!!.startDestination, false)
             .build()
     }
 

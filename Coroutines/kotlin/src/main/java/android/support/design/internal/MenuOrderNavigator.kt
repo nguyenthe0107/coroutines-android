@@ -3,9 +3,9 @@ package android.support.design.internal
 import android.content.Context
 import android.content.res.TypedArray
 import android.support.R
-import android.support.annotation.NonNull
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
+import androidx.annotation.NonNull
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import android.util.AttributeSet
 import androidx.navigation.NavDestination
 import androidx.navigation.NavOptions

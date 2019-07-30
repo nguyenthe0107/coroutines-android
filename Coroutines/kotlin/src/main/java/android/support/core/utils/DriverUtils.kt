@@ -13,9 +13,9 @@ import android.net.Uri
 import android.nfc.NfcManager
 import android.provider.MediaStore
 import android.provider.MediaStore.MediaColumns
-import android.support.v4.app.ActivityCompat
-import android.support.v4.app.NotificationManagerCompat
-import android.support.v7.app.AlertDialog
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.appcompat.app.AlertDialog
 
 
 object DriverUtils {

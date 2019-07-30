@@ -1,8 +1,8 @@
 package com.kantek.coroutines.app
 
-import android.arch.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
-import android.support.annotation.StringRes
+import androidx.annotation.StringRes
 import android.support.core.annotations.LayoutId
 import android.support.core.base.BaseActivity
 import android.support.core.base.BaseViewModel
@@ -11,10 +11,9 @@ import android.support.core.extensions.getFirstGenericParameter
 import android.support.core.extensions.inject
 import android.support.core.extensions.observe
 import android.support.core.factory.ViewModelFactory
-import android.support.core.helpers.AppSettings
 import android.support.core.utils.DriverUtils
-import android.support.design.widget.Snackbar
-import android.support.v7.app.AlertDialog
+import com.google.android.material.snackbar.Snackbar
+import androidx.appcompat.app.AlertDialog
 import android.view.View
 import android.widget.Toast
 import com.kantek.coroutines.R

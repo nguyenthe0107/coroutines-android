@@ -6,16 +6,18 @@
     android:layout_gravity="center"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context="android.support.design.widget.BottomMenuView">
+    tools:context="com.google.android.material.tabs.BottomMenuView">
 
     <ImageView
-        android:layout_width="28dp"
-        android:layout_height="28dp"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
         android:scaleType="fitCenter" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:ellipsize="end"
+        android:lines="1"
         tools:text="item" />
 </LinearLayout>

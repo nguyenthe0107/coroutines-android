@@ -2,8 +2,8 @@ package com.kantek.coroutines.widgets
 
 import android.content.Context
 import android.support.core.extensions.dpToPx
-import android.support.v4.widget.CircularProgressDrawable
-import android.support.v7.widget.AppCompatImageView
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable
+import androidx.appcompat.widget.AppCompatImageView
 import android.util.AttributeSet
 import com.bumptech.glide.Glide
 
@@ -16,7 +16,7 @@ open class LightWeightImageView : AppCompatImageView {
     fun setImageUrl(url: String) {
         Glide.with(this)
             .load(url)
-            .placeholder(CircularProgressDrawable(context).apply {
+            .placeholder(androidx.swiperefreshlayout.widget.CircularProgressDrawable(context).apply {
                 centerRadius = context.dpToPx(6f)
                 strokeWidth = context.dpToPx(2f)
                 start()

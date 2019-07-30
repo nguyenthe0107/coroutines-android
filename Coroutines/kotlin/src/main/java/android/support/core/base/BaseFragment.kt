@@ -11,7 +11,7 @@ import android.support.core.lifecycle.LifeRegister
 import android.support.core.lifecycle.ResultLifecycle
 import android.support.core.lifecycle.ResultRegistry
 import android.support.core.lifecycle.ViewLifecycleOwner
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.util.Log
 import android.view.View
 
@@ -19,7 +19,7 @@ import android.view.View
  * Custom for lifecycle
  */
 abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
-    private val TAG: String = "F/${this.javaClass.simpleName}"
+    private val TAG: String = this.javaClass.simpleName
 
     companion object {
         private const val STATE_INVISIBLE = 1
@@ -90,13 +90,13 @@ abstract class BaseFragment : Fragment(), Backable, Dispatcher, Navigable {
             mLifeRegistry.pause()
             performStopFragment()
             mLifeRegistry.stop()
-            Log.i(TAG, "Hide-Stop")
+            Log.i(TAG, "Hide")
         } else {
             performStartFragment()
             mLifeRegistry.start()
             onFragmentResumed()
             mLifeRegistry.resume()
-            Log.i(TAG, "Show-Start")
+            Log.i(TAG, "Show")
         }
         dispatchHidden(hidden)
     }
