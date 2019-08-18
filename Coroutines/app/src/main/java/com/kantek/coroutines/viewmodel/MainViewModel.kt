@@ -1,7 +1,6 @@
 package com.kantek.coroutines.viewmodel
 
 import android.support.core.event.SingleLiveEvent
-import android.support.core.extensions.map
 import com.kantek.coroutines.R
 import com.kantek.coroutines.app.AppViewModel
 import com.kantek.coroutines.app.UpdateException
@@ -25,19 +24,19 @@ class MainViewModel(
     val updateTodo = SingleLiveEvent<Todo>()
     val updateTodoError = SingleLiveEvent<UpdateException>()
 
-    val posts = refresh.map(this) {
+    val posts = refresh.next {
         postRepository.getPosts()
     }
 
-    val albums = refresh.map(this) {
+    val albums = refresh.next {
         albumRepository.getAlbums()
     }
 
-    val todos = refresh.map(this) {
+    val todos = refresh.next {
         todoRepository.getTodos()
     }
 
-    val updateTodoSuccess = updateTodo.map(this) {
+    val updateTodoSuccess = updateTodo.next {
         todoRepository.update(it!!, "completed" to (!it.completed).toString())
     }
 
