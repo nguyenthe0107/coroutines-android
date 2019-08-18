@@ -55,40 +55,6 @@ fun <T, V> LiveData<T>.mapLive(function: MutableLiveData<V>.(T?) -> Unit): LiveD
         }
     }
 
-fun <T, V> LiveData<T>.map(
-    viewModel: BaseViewModel,
-    loading: MutableLiveData<Boolean>? = viewModel.loading,
-    error: SingleLiveEvent<out Throwable>? = viewModel.error,
-    function: suspend CoroutineScope.(T?) -> V?
-): LiveData<V> = MediatorLiveData<V>().also { next ->
-    next.addSource(this) {
-        viewModel.launch(loading, error) {
-            next.postValue(function(this, it))
-        }
-    }
-}
-
-fun <T, V> LiveData<T>.switchMap(
-    viewModel: BaseViewModel,
-    loading: MutableLiveData<Boolean>? = viewModel.loading,
-    error: SingleLiveEvent<out Throwable>? = viewModel.error,
-    function: suspend CoroutineScope.(T?) -> LiveData<V>
-): LiveData<V> = MediatorLiveData<V>().also { result ->
-    result.addSource<T>(this, object : Observer<T> {
-        var mSource: LiveData<V>? = null
-
-        override fun onChanged(x: T?) {
-            viewModel.launch(loading, error) {
-                val newLiveData = function(this@launch, x)
-                if (mSource == newLiveData) return@launch
-                mSource?.apply { result.removeSource(this) }
-                mSource = newLiveData
-                mSource?.apply { result.addSource(this) { y -> result.value = y } }
-            }
-        }
-    })
-}
-
 fun <T> LiveData<T>.asSingleEvent() = SingleLiveEvent<T>().also { next ->
     next.addSource(this) { next.value = it }
 }
