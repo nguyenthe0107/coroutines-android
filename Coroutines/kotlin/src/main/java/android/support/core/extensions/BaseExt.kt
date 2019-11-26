@@ -1,13 +1,13 @@
 package android.support.core.extensions
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.os.Parcelable
 import android.support.core.annotations.SharedOf
 import android.support.core.factory.ViewModelFactory
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import java.io.Serializable
 
 
@@ -26,19 +26,19 @@ inline fun <reified T : ViewModel> Fragment.viewModel(sharedOf: SharedOf) =
     lazy {
         val factory = ViewModelFactory.sInstance
         val provider = when (sharedOf) {
-            SharedOf.NONE -> ViewModelProviders.of(this, factory)
+            SharedOf.NONE -> ViewModelProvider(this, factory)
             SharedOf.PARENT -> {
                 if (parentFragment != null)
-                    ViewModelProviders.of(parentFragment!!, factory)
+                    ViewModelProvider(parentFragment!!, factory)
                 else
-                    ViewModelProviders.of(activity!!, factory)
+                    ViewModelProvider(activity!!, factory)
             }
-            else -> ViewModelProviders.of(activity!!, factory)
+            else -> ViewModelProvider(activity!!, factory)
         }
         provider.get(T::class.java)
     }
 
 inline fun <reified T : ViewModel> FragmentActivity.viewModel() = lazy {
     val factory = ViewModelFactory.sInstance
-    ViewModelProviders.of(this, factory).get(T::class.java)
+    ViewModelProvider(this, factory).get(T::class.java)
 }

@@ -34,11 +34,10 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$compatVersion"
     implementation "com.google.android.material:material:$supportVersion"
     implementation "androidx.legacy:legacy-support-v4:$supportVersion"
-    implementation "androidx.recyclerview:recyclerview:$supportVersion"
+    implementation "androidx.recyclerview:recyclerview:$recvVersion"
 
     //Architecture
     implementation "androidx.navigation:navigation-fragment-ktx:$navVersion"
-    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycleVersion"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroVersion"

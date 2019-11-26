@@ -33,11 +33,10 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$compatVersion"
     implementation "com.google.android.material:material:$supportVersion"
     implementation "androidx.legacy:legacy-support-v4:$supportVersion"
-    implementation "androidx.recyclerview:recyclerview:$supportVersion"
+    implementation "androidx.recyclerview:recyclerview:$recvVersion"
 
     //Architecture
     implementation "androidx.navigation:navigation-fragment-ktx:$navVersion"
-    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycleVersion"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroVersion"
@@ -45,15 +44,20 @@ dependencies {
     def retrofitVersion = "2.4.0"
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
-    implementation 'com.squareup.okhttp3:okhttp:3.12.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.2.1'
+    implementation ("com.squareup.retrofit2:converter-simplexml:$retrofitVersion"){
+        exclude group: 'stax', module: 'stax-api'
+        exclude group: 'stax', module: 'stax'
+        exclude group: 'xpp3', module: 'xpp3'
+    }
 
-    def roomVersion = "2.2.0-alpha01"
+    def roomVersion = "2.2.2"
     implementation "androidx.room:room-runtime:$roomVersion"
     kapt "androidx.room:room-compiler:$roomVersion"
 
     // Other
-    implementation 'com.github.bumptech.glide:glide:4.9.0'
-    implementation 'com.google.firebase:firebase-messaging:19.0.1'
+    implementation 'com.github.bumptech.glide:glide:4.10.0'
+    implementation 'com.google.firebase:firebase-messaging:20.0.1'
 
     implementation project(path: ':kotlin')
     testImplementation 'junit:junit:4.12'

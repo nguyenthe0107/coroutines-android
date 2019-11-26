@@ -1,8 +1,6 @@
 package com.kantek.coroutines.app
 
-import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
-import androidx.annotation.StringRes
 import android.support.core.annotations.LayoutId
 import android.support.core.annotations.ShareViewModel
 import android.support.core.annotations.SharedOf
@@ -15,6 +13,8 @@ import android.support.core.factory.ViewModelFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.StringRes
+import androidx.lifecycle.ViewModelProvider
 import com.kantek.coroutines.R
 
 abstract class AppFragment<VM : BaseViewModel> : BaseFragment() {
@@ -26,9 +26,9 @@ abstract class AppFragment<VM : BaseViewModel> : BaseFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = when (getAnnotation<ShareViewModel>()?.value) {
-            SharedOf.ACTIVITY -> ViewModelProviders.of(activity!!, ViewModelFactory.sInstance)
-            SharedOf.PARENT -> ViewModelProviders.of(parentFragment!!, ViewModelFactory.sInstance)
-            else -> ViewModelProviders.of(this, ViewModelFactory.sInstance)
+            SharedOf.ACTIVITY -> ViewModelProvider(activity!!, ViewModelFactory.sInstance)
+            SharedOf.PARENT -> ViewModelProvider(parentFragment!!, ViewModelFactory.sInstance)
+            else -> ViewModelProvider(this, ViewModelFactory.sInstance)
         }.get(getFirstGenericParameter()) as VM
     }
 

@@ -10,7 +10,7 @@ class TokenInterceptor(private val appCache: AppCache) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
         if (appCache.user != null) {
-            val url = request.url().newBuilder().addQueryParameter("userId", appCache.user!!.id).build()
+            val url = request.url.newBuilder().addQueryParameter("userId", appCache.user!!.id).build()
             request = request.newBuilder().url(url).build()
         }
         return chain.proceed(request)

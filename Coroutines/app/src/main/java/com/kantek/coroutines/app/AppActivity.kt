@@ -1,8 +1,6 @@
 package com.kantek.coroutines.app
 
-import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
-import androidx.annotation.StringRes
 import android.support.core.annotations.LayoutId
 import android.support.core.base.BaseActivity
 import android.support.core.base.BaseViewModel
@@ -12,10 +10,12 @@ import android.support.core.extensions.inject
 import android.support.core.extensions.observe
 import android.support.core.factory.ViewModelFactory
 import android.support.core.utils.DriverUtils
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AlertDialog
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.snackbar.Snackbar
 import com.kantek.coroutines.R
 import com.kantek.coroutines.datasource.AppEvent
 import com.kantek.coroutines.views.LoginActivity
@@ -43,7 +43,10 @@ abstract class AppActivity<VM : BaseViewModel> : BaseActivity() {
         super.onCreate(savedInstanceState)
         getAnnotation<LayoutId>()?.apply { setContentView(value) }
         @Suppress("UNCHECKED_CAST")
-        viewModel = ViewModelProviders.of(this, ViewModelFactory.sInstance).get(getFirstGenericParameter()) as VM
+        viewModel = ViewModelProvider(
+            this,
+            ViewModelFactory.sInstance
+        ).get(getFirstGenericParameter()) as VM
 
         mLoadingView = findViewById(R.id.viewLoading)
         rootView = findViewById(android.R.id.content)
@@ -64,7 +67,11 @@ abstract class AppActivity<VM : BaseViewModel> : BaseActivity() {
             }
             is ResourceException -> toast(error.resource)
             is SocketTimeoutException -> toast(R.string.error_request_timeout)
-            is SnackException -> Snackbar.make(rootView, error.resource, Snackbar.LENGTH_SHORT).show()
+            is SnackException -> Snackbar.make(
+                rootView,
+                error.resource,
+                Snackbar.LENGTH_SHORT
+            ).show()
             is AlertException -> mAlertDialog.apply { setMessage(getString(error.resource)) }.show()
             is UnknownHostException -> if (DriverUtils.isNetworkEnabled(this))
                 toast("Error Internal Server")
