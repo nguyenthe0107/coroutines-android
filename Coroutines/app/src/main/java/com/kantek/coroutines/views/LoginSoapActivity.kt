@@ -18,7 +18,7 @@ class LoginSoapActivity : AppActivity<LoginSoapViewModel>() {
             viewModel.form.value = edtUserName.text.toString() to edtPassword.text.toString()
         }
         viewModel.user.observe(this) {
-            Toast.makeText(this, it!!.body.response?.loginReturn ?: "", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, it!!.body?.response?.loginReturn ?: "", Toast.LENGTH_SHORT).show()
         }
     }
 }
